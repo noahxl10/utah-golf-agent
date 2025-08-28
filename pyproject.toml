@@ -1,0 +1,11 @@
+[project]
+name = "utah-golf-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "datetime>=5.5",
+    "flask>=3.1.2",
+    "requests>=2.32.5",
+]
