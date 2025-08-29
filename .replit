@@ -60,3 +60,4 @@ externalPort = 8000
 
 [deployment]
 deploymentTarget = "cloudrun"
+run = "uv run -m src.main"
