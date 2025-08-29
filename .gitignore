@@ -1,4 +1,3 @@
-# Python-generated files
 __pycache__/
 *.py[oc]
 build/
@@ -6,7 +5,6 @@ dist/
 wheels/
 *.egg-info
 */golf-agent-ui
-# Virtual environments
 .venv
 */static
 *.env
