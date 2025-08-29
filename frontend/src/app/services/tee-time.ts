@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
+import { environment } from '../environments/environment';
 
 export interface TeeTime {
   start_time: string;
@@ -8,6 +10,7 @@ export interface TeeTime {
   course_name: string;
   holes: number[];
   provider: string;
+  booking_url: string;
   is_available: boolean;
   green_fee: number;
   half_cart?: number;
@@ -21,23 +24,32 @@ export interface TeeTime {
   providedIn: 'root'
 })
 export class TeeTimeService {
-  private apiUrl = 'https://10b7ea48-718e-4018-b4c6-704734d94440-00-1i3wtbxx6pimv.worf.replit.dev:8000';
+
+  
+  private apiUrl = environment.apiUrl;
+  private headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    // 'Authorization': 'Bearer ', // Example for an auth token
+    // 'X-Custom-Header': ''  // Example for a custom header
+  });
 
   constructor(private http: HttpClient) { }
 
   getAllTeeTimes(): Observable<TeeTime[]> {
-    return this.http.get<TeeTime[]>(`${this.apiUrl}/test_api/teetimes`);
+
+    // 2. Pass the headers in the options object of the get method
+    return this.http.get<TeeTime[]>(`${this.apiUrl}/test_api/teetimes`, { headers: this.headers });
   }
 
   getChronoGolfTeeTimes(): Observable<TeeTime[]> {
-    return this.http.get<TeeTime[]>(`${this.apiUrl}/api/teetimes`);
+    return this.http.get<TeeTime[]>(`${this.apiUrl}/api/teetimes`, { headers: this.headers });
   }
 
   getForeUpTeeTimes(): Observable<TeeTime[]> {
-    return this.http.get<TeeTime[]>(`${this.apiUrl}/api/foreup_teetimes`);
+    return this.http.get<TeeTime[]>(`${this.apiUrl}/api/foreup_teetimes`, { headers: this.headers });
   }
 
   getEaglewoodTeeTimes(): Observable<TeeTime[]> {
-    return this.http.get<TeeTime[]>(`${this.apiUrl}/api/eaglewood_teetimes`);
+    return this.http.get<TeeTime[]>(`${this.apiUrl}/api/eaglewood_teetimes`, { headers: this.headers });
   }
 }

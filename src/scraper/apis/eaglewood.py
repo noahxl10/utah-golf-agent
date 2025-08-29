@@ -16,8 +16,8 @@ from src.misc import request_builder
 
 class Eaglewood:
 
-    def __init__(self):
-        self.course = "Eaglewood Golf Course"
+    def __init__(self, course: Course):
+        self.course = course
         # self.course_config = CONFIG[self.course.name]
         # self.sub_config = self.course_config["config"]
         # self.endpoint = os.environ[self.sub_config["endpoint_env_var"]]
@@ -51,7 +51,8 @@ class Eaglewood:
         return TeeTime(
             start_time = self.convert_time(r.get("teeTime")),
             date = self.tee_time_parameter.date,
-            course_name = self.course,
+            course_name = self.course.name,
+            booking_url = self.course.booking_url,
             holes = holes,
             provider="membersports",
             is_available=is_available,

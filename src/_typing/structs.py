@@ -26,7 +26,7 @@ class TeeTime(BaseModel):
     course_name: str
     # available_spots: int
     holes: List[int]  # number of holes 9, 18, or both
-    booking_url: Optional[str] = None
+    booking_url: str
     special_offer: Optional[bool] = False
     restrictions: List[str] = Field(default_factory=list)
     provider: str  # chrono/fore/etc
@@ -54,6 +54,7 @@ class TeeTime(BaseModel):
 
 class Course(BaseModel):
     name: str
+    booking_url: str
     club_id: Optional[str] = None
     course_ids: Optional[list] = None
 

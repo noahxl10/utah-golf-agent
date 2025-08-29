@@ -90,3 +90,44 @@
   color: #28a745;
   font-weight: bold;
 }
+
+.tee-time-card {
+  /* Add flexbox to help position the button at the bottom */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Pushes button to the bottom if cards have different heights */
+}
+
+/* 
+  *** NEW STYLES FOR THE BUTTON ***
+*/
+.book-button {
+  /* Button Shape & Sizing */
+  display: block; /* Makes the anchor tag behave like a block element */
+  padding: 12px 15px;
+  margin-top: 15px; /* Adds space above the button */
+  width: 100%;
+  box-sizing: border-box; /* Ensures padding doesn't affect the total width */
+  border-radius: 5px;
+  border: none;
+
+  /* Colors & Text */
+  background-color: #28a745; /* A nice shade of green */
+  color: white;
+  text-align: center;
+  text-decoration: none; /* Removes the default underline from the link */
+  font-size: 16px;
+  font-weight: bold;
+
+  /* Interactivity */
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.book-button:hover {
+  background-color: #218838; /* A slightly darker green on hover */
+}
+
+.book-button:active {
+  transform: scale(0.98); /* A subtle press-down effect */
+}

@@ -131,7 +131,8 @@ class Foreup:
         return TeeTime(
             start_time = time,
             date = date,
-            course_name = self.course_name,
+            course_name = self.course.name,
+            booking_url = self.course.booking_url,
             holes = holes,
             provider="foreup",
             is_available=is_available,

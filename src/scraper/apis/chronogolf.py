@@ -20,6 +20,8 @@ class CourseAPI:
         self.course = course
         self.course_config = CONFIG[self.course.name]
         self.sub_config = self.course_config["config"]
+        print(self.course_config)
+        print(self.sub_config)
         self.endpoint = os.environ[self.sub_config["endpoint_env_var"]]
 
 
@@ -47,9 +49,10 @@ class V1(CourseAPI):
             start_time = r.get('start_time'),
             date = r.get('date'),
             course_name = self.course.name,
-            holes = r.get('hole'),
+            holes = [18], # r.get('hole')
             restrictions = r.get('restrictions'),
             provider = self.course_config.get("provider", ""),
+            booking_url = self.course.booking_url,
             is_available = is_available,
             green_fee = fee_info.get('green_fee', 0),
             price = fee_info.get('price', 0),
@@ -78,9 +81,10 @@ class V1(CourseAPI):
 
     def _hit_endpoint_with_curl(self, tee_time_parameter: TeeTimeParameter):
         cmd = request_builder.cg_v1(tee_time_parameter)
+
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
         data = json.loads(result.stdout)
-        print(data)
         return data
 
     def get_tee_times(self, tee_time_parameter: TeeTimeParameter) -> List[TeeTime]: #  
@@ -127,9 +131,9 @@ class V2(CourseAPI):
         tee_time_data = {
             "start_time": response_data.get("starts_at"),  # UTC time
             "date": response_data.get("date"),
-            "course_name": course_info.get("name"),
-            "holes": price_info.get("bookable_holes", course_info.get("holes", 18)),
-            "booking_url": None,  # Not provided in this API version's response
+            "course_name": self.course.name,
+            "booking_url": self.course.booking_url,
+            "holes": [price_info.get("bookable_holes", course_info.get("holes", 18))],
             "special_offer": response_data.get("has_deal", False),
             "restrictions": restrictions,
             "provider": "chronogolf_v2",
@@ -139,6 +143,7 @@ class V2(CourseAPI):
             "half_cart": price_info.get("half_cart", 0.0),
             "subtotal": price_info.get("subtotal", 0.0)
         }
+        # print(tee_time_data)
 
         # Validate and create the TeeTime model
         tee_time_obj = TeeTime(**tee_time_data)
@@ -169,9 +174,9 @@ class V2(CourseAPI):
         cmd = request_builder.cg_v2(tee_time_parameter)
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         data = json.loads(result.stdout)
-        print(data)
+        # print(data)
         data = data.get("teetimes", [])
-        print(json.dumps(data, indent=2))
+        # print(json.dumps(data, indent=2))
         return data
 
     def get_tee_times(self, tee_time_parameter: TeeTimeParameter) -> List[TeeTime]: #  

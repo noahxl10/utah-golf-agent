@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, Response, render_template, request, jsonify
+from flask_cors import CORS
 from datetime import datetime, timedelta
 import sys
 import os
+
 from src.scraper import scraper
 from src import test
 # from util.traffic import (
@@ -28,7 +30,8 @@ from src import test
 # print(f"Warning: Could not import golf modules: {e}")
 
 app = Flask(__name__)
-
+# CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200"}})
+CORS(app, origins="*")
 # Configuration
 # app.config['SECRET_KEY'] = os.environ["SECRET_KEY"]
 app.config['DEBUG'] = True
@@ -64,7 +67,7 @@ def get_foreup_tee_times():
 def get_all_tee_times():
     date = "2025-09-01"
     tee_times = scraper.chronogolf_tee_times(date)
-    print(tee_times[0])
+    # print(tee_times[0])
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
 
     return jsonify(data_to_return)
@@ -80,5 +83,5 @@ def test_get_all_tee_times():
 
     data_to_return = [tee_time.model_dump() for tee_time in tee_times_list]
     response = jsonify(data_to_return)
-    print(response)
+
     return response

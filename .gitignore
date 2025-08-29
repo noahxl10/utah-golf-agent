@@ -11,3 +11,6 @@ wheels/
 */static
 *.env
 */misc
+frontend/src/app/environments/
+replit.md
+.replit

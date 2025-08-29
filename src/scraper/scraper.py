@@ -4,6 +4,7 @@ import json
 from typing import List, Dict, Any
 from src.config import courses
 import os
+import traceback
 import subprocess
 # import ....static.config.config as C
 from src.scraper.apis.chronogolf import V1, V2
@@ -31,33 +32,39 @@ def chronogolf_tee_times(date):
     all_tee_times = []
 
     for course_name in courses:
+        try:
+            course_details = courses.get(course_name)
+            sub_details = course_details.get("config")
+            print(sub_details)
 
-        course_details = courses.get(course_name)
-        sub_details = course_details.get("config")
+            # add date to booking url for specific click-search
+            booking_url = f"{sub_details.get('booking_url')}?date={date}"
+            course = Course(
+                name=course_name,
+                booking_url=booking_url,
+                club_id=sub_details.get("club_id", None),
+                course_ids=sub_details.get("course_ids", None)
+            )
 
-        course = Course(
-            name=course_name,
-            club_id=sub_details.get("club_id", None),
-            course_ids=sub_details.get("course_ids", None)
-        )
+            ttp = TeeTimeParameter(
+                endpoint=os.environ[sub_details.get("endpoint_env_var")],
+                date=date,
+                num_players=3,
+                holes=[18],
+                course=course,
+            )
 
-        ttp = TeeTimeParameter(
-            endpoint=os.environ[sub_details.get("endpoint_env_var")],
-            date=date,
-            num_players=3,
-            holes=[18],
-            course=course,
-        )
+            tee_times = []
+            if course_details.get("provider") == "chronogolf":
+                if sub_details.get("version") == "marketplaceV1":
+                    tee_times.extend(chronogolf_v1_api(ttp))
 
-        tee_times = []
-        if course_details.get("provider") == "chronogolf":
-            if sub_details.get("version") == "marketplaceV1":
-                tee_times.extend(chronogolf_v1_api(ttp))
+                elif sub_details.get("version") == "marketplaceV2":
+                    tee_times.extend(chronogolf_v2_api(ttp))
 
-            elif sub_details.get("version") == "marketplaceV2":
-                tee_times.extend(chronogolf_v2_api(ttp))
-
-        all_tee_times.extend(tee_times)
+            all_tee_times.extend(tee_times)
+        except Exception as e:
+            print(traceback.format_exc())
 
     return all_tee_times
 
