@@ -15,12 +15,6 @@ CORS(app, origins="*")
 app.config['DEBUG'] = True
 
 
-@app.route('/', methods=['GET'])
-def health_check():
-    """Health check endpoint for deployment monitoring"""
-    return jsonify({"status": "healthy", "message": "Utah Golf Booking API is running"})
-
-
 @app.route('/api/eaglewood_teetimes', methods=['GET'])
 def get_eaglewood_tee_times():
     date = "2025-09-01"
