@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://YOUR_REPLIT_DOMAIN:8000'
+  apiUrl: 'https://YOUR_REPLIT_DOMAIN'
 };

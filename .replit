@@ -26,13 +26,13 @@ args = "Backend"
 name = "Frontend"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd frontend && npm start"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm start -- --host=0.0.0.0 --port=5000 --poll=2000"
+waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Backend"
@@ -45,6 +45,10 @@ outputType = "console"
 task = "shell.exec"
 args = "uv run -m src.main"
 waitForPort = 8000
+
+[[ports]]
+localPort = 4000
+externalPort = 3000
 
 [[ports]]
 localPort = 5000
