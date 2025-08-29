@@ -25,7 +25,7 @@ from src import test
 #     from stonebridge import get_stonebridge_teetimes, parse_stonebridge_teetimes
 #     from stonebridge_auth import get_bearer_token
 # except ImportError as e:
-    # print(f"Warning: Could not import golf modules: {e}")
+# print(f"Warning: Could not import golf modules: {e}")
 
 app = Flask(__name__)
 
@@ -67,8 +67,6 @@ def get_all_tee_times():
     print(tee_times[0])
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
 
-    # Step 3: Use Flask's jsonify to create a proper JSON response
-    # jsonify handles setting the correct Content-Type header (application/json)
     return jsonify(data_to_return)
 
 
@@ -77,13 +75,10 @@ def test_get_all_tee_times():
     """
     This endpoint fetches a list of TeeTime objects and returns them as a JSON array.
     """
-    # Step 1: Get the list of Pydantic objects from your data source
+
     tee_times_list = test.get_mock_tee_times()
 
-    # Step 2: Convert the list of Pydantic models to a list of dictionaries
-    # Pydantic's .model_dump() method serializes the model to a dict.
     data_to_return = [tee_time.model_dump() for tee_time in tee_times_list]
-
-    # Step 3: Use Flask's jsonify to create a proper JSON response
-    # jsonify handles setting the correct Content-Type header (application/json)
-    return jsonify(data_to_return)
+    response = jsonify(data_to_return)
+    print(response)
+    return response
