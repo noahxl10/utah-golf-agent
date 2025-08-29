@@ -6,10 +6,15 @@ export interface TeeTime {
   start_time: string;
   date: string;
   course_name: string;
-  holes: number;
+  holes: number[];
+  provider: string;
+  is_available: boolean;
   green_fee: number;
-  cart_fee: number;
-  total_price: number;
+  half_cart?: number;
+  subtotal: number;
+  price: number;
+  restrictions?: string[];
+  special_offer?: boolean;
 }
 
 @Injectable({

@@ -16,11 +16,14 @@
       <h3>{{ teeTime.course_name }}</h3>
       <p><strong>Date:</strong> {{ teeTime.date }}</p>
       <p><strong>Time:</strong> {{ teeTime.start_time }}</p>
-      <p><strong>Holes:</strong> {{ teeTime.holes }}</p>
+      <p><strong>Holes:</strong> {{ teeTime.holes.join(', ') }}</p>
       <div class="pricing">
         <p><strong>Green Fee:</strong> ${{ teeTime.green_fee }}</p>
-        <p><strong>Cart Fee:</strong> ${{ teeTime.cart_fee }}</p>
-        <p class="total"><strong>Total:</strong> ${{ teeTime.total_price }}</p>
+        <p *ngIf="teeTime.half_cart"><strong>Cart Fee:</strong> ${{ teeTime.half_cart }}</p>
+        <p class="total"><strong>Total:</strong> ${{ teeTime.price }}</p>
+      </div>
+      <div *ngIf="teeTime.restrictions && teeTime.restrictions.length > 0" class="restrictions">
+        <p><strong>Restrictions:</strong> {{ teeTime.restrictions.join(', ') }}</p>
       </div>
     </div>
   </div>
