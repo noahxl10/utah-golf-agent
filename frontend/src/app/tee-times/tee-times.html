@@ -1,0 +1,27 @@
+<div class="tee-times-container">
+  <h2>Utah Golf Tee Times</h2>
+  
+  <div class="button-group">
+    <button (click)="loadTestTeeTimes()" [disabled]="loading">Test Data</button>
+    <button (click)="loadChronoGolfTeeTimes()" [disabled]="loading">ChronoGolf</button>
+    <button (click)="loadForeUpTeeTimes()" [disabled]="loading">ForeUp</button>
+    <button (click)="loadEaglewoodTeeTimes()" [disabled]="loading">Eaglewood</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Loading tee times...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <div *ngIf="teeTimes.length > 0" class="tee-times-grid">
+    <div *ngFor="let teeTime of teeTimes" class="tee-time-card">
+      <h3>{{ teeTime.course_name }}</h3>
+      <p><strong>Date:</strong> {{ teeTime.date }}</p>
+      <p><strong>Time:</strong> {{ teeTime.start_time }}</p>
+      <p><strong>Holes:</strong> {{ teeTime.holes }}</p>
+      <div class="pricing">
+        <p><strong>Green Fee:</strong> ${{ teeTime.green_fee }}</p>
+        <p><strong>Cart Fee:</strong> ${{ teeTime.cart_fee }}</p>
+        <p class="total"><strong>Total:</strong> ${{ teeTime.total_price }}</p>
+      </div>
+    </div>
+  </div>
+</div>
