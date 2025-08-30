@@ -97,11 +97,11 @@ def get_all_cached_tee_times():
         date=date, 
         available_only=available_only
     )
-    
-    return jsonify({
-        'count': len(cached_tee_times),
-        'tee_times': cached_tee_times
-    })
+    return jsonify(cached_tee_times)
+    # return jsonify({
+    #     'count': len(cached_tee_times),
+    #     'tee_times': cached_tee_times
+    # })
 
 
 @app.route('/api/cached_teetimes/<course_name>', methods=['GET'])
