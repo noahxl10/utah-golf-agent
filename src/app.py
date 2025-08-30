@@ -17,21 +17,6 @@ app.config['DEBUG'] = True
 init_db(app)
 
 
-@app.route('/')
-def index():
-    return jsonify({
-        "message": "Utah Golf Booking API",
-        "endpoints": {
-            "/api/teetimes": "Get ChronoGolf tee times",
-            "/api/foreup_teetimes": "Get ForeUp tee times", 
-            "/api/eaglewood_teetimes": "Get Eaglewood tee times",
-            "/test_api/teetimes": "Get mock tee times for testing",
-            "/api/cached_teetimes": "Get all cached tee times",
-            "/api/cached_teetimes/<course_name>": "Get cached tee times for specific course"
-        }
-    })
-
-
 @app.route('/api/eaglewood_teetimes', methods=['GET'])
 def get_eaglewood_tee_times():
     date = request.args.get('date', '2025-09-01')
@@ -66,6 +51,7 @@ def get_chronogolf_tee_times():
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
 
     return jsonify(data_to_return)
+
 
 @app.route('/api/teetimes', methods=['GET'])
 def get_all_tee_times():
