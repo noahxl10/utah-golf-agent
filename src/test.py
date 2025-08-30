@@ -11,7 +11,7 @@ def get_mock_tee_times():
     """
     tee_times = [
         TeeTime(
-            start_time="2025-08-30T14:00:00Z",
+            start_time_unf="2025-08-30T14:00:00Z",
             date="2025-08-30",
             course_name="South Mountain 18 Holes",
             holes=[18],
@@ -25,7 +25,7 @@ def get_mock_tee_times():
             restrictions=["Minimum 2 players"]
         ),
         TeeTime(
-            start_time="2025-08-30T14:10:00Z",
+            start_time_unf="2025-08-30T14:10:00Z",
             date="2025-08-30",
             course_name="South Mountain 18 Holes",
             holes=[18],
@@ -39,7 +39,7 @@ def get_mock_tee_times():
             special_offer=True
         ),
         TeeTime(
-            start_time="2025-08-30T09:20:00Z",
+            start_time_unf="2025-08-30T09:20:00Z",
             date="2025-08-30",
             course_name="Stonebridge Golf Club",
             holes=[9],

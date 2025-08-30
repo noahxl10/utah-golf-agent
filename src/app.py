@@ -3,7 +3,7 @@ from flask_cors import CORS
 from datetime import datetime, timedelta
 import sys
 import os
-from config import courses
+from src.config import courses
 from src.scraper import scraper
 from src import test
 
