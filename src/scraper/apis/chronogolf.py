@@ -46,7 +46,7 @@ class V1(CourseAPI):
             fee_info = green_fees[0]  # Take first fee option
 
         return TeeTime(
-            start_time = r.get('start_time'),
+            start_time_unf = r.get('start_time'),
             date = r.get('date'),
             course_name = self.course.name,
             holes = [18], # r.get('hole')
@@ -129,7 +129,8 @@ class V2(CourseAPI):
 
         # Construct the data dictionary for Pydantic validation
         tee_time_data = {
-            "start_time": response_data.get("starts_at"),  # UTC time
+            # "start_time": response_data.get("starts_at"),  # UTC time
+            "start_time_unf": response_data.get("start_time"),
             "date": response_data.get("date"),
             "course_name": self.course.name,
             "booking_url": self.course.booking_url,

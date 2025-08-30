@@ -1,25 +1,37 @@
 
 courses = {
-    "Bonneville Golf Course": {
+    # "Bonneville Golf Course": {
+    #     "provider": "chronogolf",
+    #     "config": {
+    #         "version": "marketplaceV2",
+    #         "course_ids": [
+    #             "bc27ab7a-6218-4b61-9aa8-0838f7c44ce3",
+    #             "caa8142a-4a42-482b-8d35-4239ce26f7b0"
+    #         ],
+    #         "endpoint_env_var": "CHRONOGOLF_V2_ENDPOINT",
+    #         "booking_url": "https://www.chronogolf.com/club/bonneville-golf-course"
+    #     }
+    # },
+    # "Old Mill Golf Course": {
+    #     "provider": "chronogolf",
+    #     "config": {
+    #         "version": "marketplaceV1",
+    #         "club_id": "14210",
+    #         "course_ids": ["16298"],
+    #         "endpoint_env_var": "CHRONOGOLF_V1_ENDPOINT",
+    #         "booking_url": "https://www.chronogolf.com/club/old-mill-slco"  # Not located yet
+    #     }
+    # },
+    "Rose Park Golf Course": {
         "provider": "chronogolf",
         "config": {
             "version": "marketplaceV2",
             "course_ids": [
-                "bc27ab7a-6218-4b61-9aa8-0838f7c44ce3",
-                "caa8142a-4a42-482b-8d35-4239ce26f7b0"
+                "19a5558e-3821-4935-b6bd-0cbc99693d91",
+                "f899015b-2109-4028-8640-d670ada581e4"
             ],
             "endpoint_env_var": "CHRONOGOLF_V2_ENDPOINT",
-            "booking_url": "https://www.chronogolf.com/club/bonneville-golf-course"
-        }
-    },
-    "Old Mill Golf Course": {
-        "provider": "chronogolf",
-        "config": {
-            "version": "marketplaceV1",
-            "club_id": "14210",
-            "course_ids": ["16298"],
-            "endpoint_env_var": "CHRONOGOLF_V1_ENDPOINT",
-            "booking_url": "https://www.chronogolf.com/club/old-mill-slco"  # Not located yet
+            "booking_url": "https://www.chronogolf.com/club/rose-park-golf-course"
         }
     },
     "Bountiful Ridge Golf Course": {
@@ -46,9 +58,11 @@ courses = {
     #         "access": "private",
     #     }
     # },
-    # "Eaglewood Golf Course": {
-    #     "provider": "custom",
-    #     "config": {
-    #     }
-    # },
+    "Eaglewood Golf Course": {
+        "provider": "custom",
+        "config": {
+            "endpoint_env_var": "EAGLEWOOD_ENDPOINT",
+            "booking_url": "https://app.membersports.com/tee-times/15391/18901/0"
+        }
+    },
 }

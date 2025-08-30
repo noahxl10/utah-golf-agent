@@ -20,9 +20,20 @@ class BaseModel(PyBaseModel):
     __repr__ = __str__  # optional, same formatting for repr
 
 
+def add_leading_zero_manual(time_str: str) -> str:
+    """Manually adds a leading zero to the hour if needed."""
+    try:
+        hour, minutes = time_str.split(':')
+        if len(hour) == 1:
+            hour = '0' + hour
+        return f"{hour}:{minutes}"
+    except ValueError:
+        return time_str
+
+
 class TeeTime(BaseModel):
-    start_time: str # cron time, UTC time
     date: str
+    start_time_unf: str # cron time, UTC time unformatted
     course_name: str
     # available_spots: int
     holes: List[int]  # number of holes 9, 18, or both
@@ -48,9 +59,10 @@ class TeeTime(BaseModel):
     # def is_available(self) -> bool:
     #     return self.available_spots > 0
 
-    # @property
-    # def formatted_price(self) -> str:
-    #     return f"${self.price:.2f}"
+    @property
+    def start_time(self) -> str:
+        return add_leading_zero_manual(self.start_time_unf)
+
 
 class Course(BaseModel):
     name: str

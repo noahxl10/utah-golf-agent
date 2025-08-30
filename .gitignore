@@ -4,11 +4,10 @@ build/
 dist/
 wheels/
 *.egg-info
-*/golf-agent-ui
 .venv
 */static
 *.env
 */misc
-frontend/src/app/environments/
 replit.md
 .replit
+.DS_Store

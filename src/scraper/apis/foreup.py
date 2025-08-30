@@ -129,7 +129,7 @@ class Foreup:
             is_available = True
 
         return TeeTime(
-            start_time = time,
+            start_time_unf = time,
             date = date,
             course_name = self.course.name,
             booking_url = self.course.booking_url,

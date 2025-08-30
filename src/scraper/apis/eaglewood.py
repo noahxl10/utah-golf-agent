@@ -23,11 +23,18 @@ class Eaglewood:
         # self.endpoint = os.environ[self.sub_config["endpoint_env_var"]]
 
 
+    # def convert_time(self, minutes: int) -> str:
+        # """Convert minutes since midnight to a formatted time string."""
+        # midnight = datetime.strptime("00:00", "%H:%M")
+        # time_obj = midnight + timedelta(minutes=minutes)
+        # return time_obj.strftime("%I:%M %p").lstrip("0")  # strip leading zero
+
+
     def convert_time(self, minutes: int) -> str:
         """Convert minutes since midnight to a formatted time string."""
         midnight = datetime.strptime("00:00", "%H:%M")
         time_obj = midnight + timedelta(minutes=minutes)
-        return time_obj.strftime("%I:%M %p").lstrip("0")  # strip leading zero
+        return time_obj.strftime("%H:%M")  # Military time format
 
 
     def get_tee_time_from_response(self, r):
@@ -49,7 +56,7 @@ class Eaglewood:
             is_available = True
 
         return TeeTime(
-            start_time = self.convert_time(r.get("teeTime")),
+            start_time_unf = self.convert_time(r.get("teeTime")),
             date = self.tee_time_parameter.date,
             course_name = self.course.name,
             booking_url = self.course.booking_url,
