@@ -6,10 +6,15 @@ import os
 from src.config import courses
 from src.scraper import scraper
 from src import test
+from src.models import db, init_db
+from src.cache_service import TeeTimeCacheService
 
 app = Flask(__name__)
 CORS(app, origins="*")
 app.config['DEBUG'] = True
+
+# Initialize database
+init_db(app)
 
 
 @app.route('/')
@@ -20,27 +25,35 @@ def index():
             "/api/teetimes": "Get ChronoGolf tee times",
             "/api/foreup_teetimes": "Get ForeUp tee times", 
             "/api/eaglewood_teetimes": "Get Eaglewood tee times",
-            "/test_api/teetimes": "Get mock tee times for testing"
+            "/test_api/teetimes": "Get mock tee times for testing",
+            "/api/cached_teetimes": "Get all cached tee times",
+            "/api/cached_teetimes/<course_name>": "Get cached tee times for specific course"
         }
     })
 
 
 @app.route('/api/eaglewood_teetimes', methods=['GET'])
 def get_eaglewood_tee_times():
-    date = "2025-09-01"
+    date = request.args.get('date', '2025-09-01')
     tee_times = scraper.eaglewood_tee_times(date)
-    # print(tee_times[0])
+    
+    # Cache the tee times
+    if tee_times:
+        TeeTimeCacheService.cache_tee_times(tee_times, 'eaglewood')
+    
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
-
-    # Step 3: Use Flask's jsonify to create a proper JSON response
-    # jsonify handles setting the correct Content-Type header (application/json)
     return jsonify(data_to_return)
 
 
 @app.route('/api/foreup_teetimes', methods=['GET'])
 def get_foreup_tee_times():
-    date = "2025-09-01"
+    date = request.args.get('date', '2025-09-01')
     tee_times = scraper.foreup_tee_times(date)
+    
+    # Cache the tee times
+    if tee_times:
+        TeeTimeCacheService.cache_tee_times(tee_times, 'foreup')
+    
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
     return jsonify(data_to_return)
 
@@ -54,15 +67,16 @@ def get_chronogolf_tee_times():
 
     return jsonify(data_to_return)
 
-# @log_request
-# @rate_limiter
 @app.route('/api/teetimes', methods=['GET'])
 def get_all_tee_times():
-    date = "2025-09-01"
-    tee_times = scraper.get_all_tee_times(date)
-    # print(tee_times[0])
+    date = request.args.get('date', '2025-09-01')
+    tee_times = scraper.chronogolf_tee_times(date)
+    
+    # Cache the tee times
+    if tee_times:
+        TeeTimeCacheService.cache_tee_times(tee_times, 'chronogolf')
+    
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
-
     return jsonify(data_to_return)
 
 
@@ -85,3 +99,50 @@ def get_course_list():
     course_list = [course for course in courses]
     response = jsonify(course_list)
     return response
+
+
+@app.route('/api/cached_teetimes', methods=['GET'])
+def get_all_cached_tee_times():
+    """Get all cached tee times"""
+    date = request.args.get('date')
+    available_only = request.args.get('available_only', 'true').lower() == 'true'
+    
+    cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
+        date=date, 
+        available_only=available_only
+    )
+    
+    return jsonify({
+        'count': len(cached_tee_times),
+        'tee_times': cached_tee_times
+    })
+
+
+@app.route('/api/cached_teetimes/<course_name>', methods=['GET'])
+def get_cached_tee_times_by_course(course_name):
+    """Get cached tee times for a specific course"""
+    date = request.args.get('date')
+    available_only = request.args.get('available_only', 'true').lower() == 'true'
+    
+    cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
+        course_name=course_name,
+        date=date,
+        available_only=available_only
+    )
+    
+    return jsonify({
+        'course_name': course_name,
+        'count': len(cached_tee_times),
+        'tee_times': cached_tee_times
+    })
+
+
+@app.route('/api/cleanup_cache', methods=['POST'])
+def cleanup_old_cache():
+    """Clean up old cached tee times"""
+    days_old = request.json.get('days_old', 1) if request.json else 1
+    TeeTimeCacheService.cleanup_old_entries(days_old)
+    
+    return jsonify({
+        'message': f'Cleaned up tee times older than {days_old} days'
+    })
