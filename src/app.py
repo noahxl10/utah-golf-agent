@@ -8,11 +8,21 @@ from src.scraper import scraper
 from src import test
 
 app = Flask(__name__)
-# CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200"}})
 CORS(app, origins="*")
-# Configuration
-# app.config['SECRET_KEY'] = os.environ["SECRET_KEY"]
 app.config['DEBUG'] = True
+
+
+@app.route('/')
+def index():
+    return jsonify({
+        "message": "Utah Golf Booking API",
+        "endpoints": {
+            "/api/teetimes": "Get ChronoGolf tee times",
+            "/api/foreup_teetimes": "Get ForeUp tee times", 
+            "/api/eaglewood_teetimes": "Get Eaglewood tee times",
+            "/test_api/teetimes": "Get mock tee times for testing"
+        }
+    })
 
 
 @app.route('/api/eaglewood_teetimes', methods=['GET'])
