@@ -80,7 +80,7 @@ courses = {
                 "bd6e3c42-7ae5-4d97-b6d0-60ebf9957a7e"
             ],
             "endpoint_env_var": "CHRONOGOLF_V2_ENDPOINT",
-            "booking_url": "https://www.chronogolf.com/club/mountain-dell-golf-course"  # pattern‐based; needs validation
+            "booking_url": "https://www.chronogolf.com/club/mountain-dell-golf-club"  # pattern‐based; needs validation
         }
     },
     "Old Mill Golf Course": {
