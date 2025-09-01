@@ -6,7 +6,7 @@ import os
 from src.config import courses
 from src.scraper import scraper
 from src import test
-from src.models import db, init_db
+from src.models import db, init_db, CourseRequest
 from src.cache_service import TeeTimeCacheService
 
 
@@ -16,6 +16,23 @@ app.config['DEBUG'] = True
 
 # Initialize database
 init_db(app)
+
+
+@app.route('/')
+def index():
+    return jsonify({
+        "message": "Utah Golf Booking API",
+        "endpoints": {
+            "/api/teetimes": "Get ChronoGolf tee times",
+            "/api/foreup_teetimes": "Get ForeUp tee times", 
+            "/api/eaglewood_teetimes": "Get Eaglewood tee times",
+            "/test_api/teetimes": "Get mock tee times for testing",
+            "/api/cached_teetimes": "Get all cached tee times",
+            "/api/cached_teetimes/<course_name>": "Get cached tee times for specific course",
+            "/api/course_requests": "Submit (POST) or get (GET) course requests",
+            "/api/course_requests/<id>/mark_added": "Mark course request as added (PATCH)"
+        }
+    })
 
 
 @app.route('/api/eaglewood_teetimes', methods=['GET'])
@@ -145,4 +162,62 @@ def cleanup_old_cache():
 
     return jsonify({
         'message': f'Cleaned up tee times older than {days_old} days'
+    })
+
+
+@app.route('/api/course_requests', methods=['POST'])
+def submit_course_request():
+    """Submit a new course request"""
+    data = request.get_json()
+    
+    if not data or not data.get('course_name') or not data.get('phone_number'):
+        return jsonify({
+            'error': 'Missing required fields: course_name and phone_number'
+        }), 400
+    
+    new_request = CourseRequest(
+        course_name=data['course_name'],
+        phone_number=data['phone_number'],
+        course_id=data.get('course_id')
+    )
+    
+    db.session.add(new_request)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Course request submitted successfully',
+        'request': new_request.to_dict()
+    }), 201
+
+
+@app.route('/api/course_requests', methods=['GET'])
+def get_course_requests():
+    """Get all course requests"""
+    added_only = request.args.get('added_only', 'false').lower() == 'true'
+    
+    query = CourseRequest.query
+    if added_only:
+        query = query.filter_by(is_added=True)
+    
+    requests = query.order_by(CourseRequest.datetime_created.desc()).all()
+    
+    return jsonify({
+        'count': len(requests),
+        'requests': [req.to_dict() for req in requests]
+    })
+
+
+@app.route('/api/course_requests/<int:request_id>/mark_added', methods=['PATCH'])
+def mark_course_added(request_id):
+    """Mark a course request as added to the site"""
+    course_request = CourseRequest.query.get_or_404(request_id)
+    
+    course_request.is_added = True
+    course_request.datetime_added_to_site = datetime.utcnow()
+    
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Course request marked as added',
+        'request': course_request.to_dict()
     })

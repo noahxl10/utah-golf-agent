@@ -42,30 +42,34 @@ class TeeTimeCache(db.Model):
     
     def __repr__(self):
         return f'<TeeTimeCache {self.course_name} on {self.date} at {self.start_time}>'
+
+
+class CourseRequest(db.Model):
+    __tablename__ = 'course_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    course_name = db.Column(db.String(255), nullable=False)
+    phone_number = db.Column(db.String(20), nullable=False)
+    is_added = db.Column(db.Boolean, default=False)
+    datetime_created = db.Column(db.DateTime, default=datetime.utcnow)
+    datetime_added_to_site = db.Column(db.DateTime, nullable=True)
+    course_id = db.Column(db.String(100), nullable=True)
+    
+    def __repr__(self):
+        return f'<CourseRequest {self.course_name} by {self.phone_number}>'
     
     def to_dict(self):
         """Convert to dictionary for JSON serialization"""
         return {
             'id': self.id,
             'course_name': self.course_name,
-            'date': self.date,
-            'start_time_unf': self.start_time,
-            'start_time': self.start_time,  # For compatibility with frontend
-            'players_available': self.players_available,
-            'holes': self.holes,
-            'booking_url': self.booking_url,
-            'provider': self.provider,
-            'green_fee': self.green_fee,
-            'half_cart': self.half_cart,
-            'price': self.price,
-            'subtotal': self.subtotal,
-            'restrictions': self.restrictions or [],
-            'special_offer': self.special_offer or False,
-            'is_available': self.is_available,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'last_seen_at': self.last_seen_at.isoformat() if self.last_seen_at else None
+            'phone_number': self.phone_number,
+            'is_added': self.is_added,
+            'datetime_created': self.datetime_created.isoformat() if self.datetime_created else None,
+            'datetime_added_to_site': self.datetime_added_to_site.isoformat() if self.datetime_added_to_site else None,
+            'course_id': self.course_id
         }
+    
 
 def init_db(app):
     """Initialize the database with Flask app context"""

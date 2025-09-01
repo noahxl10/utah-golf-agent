@@ -112,11 +112,11 @@ class TeeTimeCacheService:
             query = query.filter_by(date=date)
         if available_only:
             query = query.filter_by(is_available=True)
+
         results = query.order_by(
             cast(func.replace(TeeTimeCache.start_time, ":", ""),
                  Integer).asc()).all()
-        # results = query.order_by(TeeTimeCache.date, TeeTimeCache.start_time,
-        # TeeTimeCache.course_name).all()
+
         return [result.to_dict() for result in results]
 
     @staticmethod
