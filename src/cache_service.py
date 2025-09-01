@@ -6,7 +6,7 @@ from src._typing.structs import TeeTime
 
 class TeeTimeCacheService:
     """Service class for managing tee time cache operations"""
-    
+
     @staticmethod
     def cache_tee_times(tee_times: List[TeeTime], provider: str = None):
         """
@@ -18,25 +18,23 @@ class TeeTimeCacheService:
         """
         if not tee_times:
             return
-            
+
         current_time = datetime.utcnow()
-        
+
         # Step 1: Mark all existing entries as potentially unavailable
         # We'll mark them back as available if they appear in the new data
         for tee_time in tee_times:
             course_name = tee_time.course_name
             date = tee_time.date
-            
+
             # Mark all existing entries for this course and date as unavailable initially
             existing_entries = TeeTimeCache.query.filter_by(
-                course_name=course_name,
-                date=date
-            ).all()
-            
+                course_name=course_name, date=date).all()
+
             for entry in existing_entries:
                 entry.is_available = False
                 entry.updated_at = current_time
-        
+
         # Step 2: Process new tee times
         for tee_time in tee_times:
             # Extract players_available - this might need to be calculated
@@ -44,15 +42,14 @@ class TeeTimeCacheService:
             players_available = getattr(tee_time, 'max_num_players', None) or \
                                getattr(tee_time, 'available_spots', None) or \
                                4  # Default to 4 players if not specified
-            
+
             # Check if this exact tee time already exists
             existing_entry = TeeTimeCache.query.filter_by(
                 course_name=tee_time.course_name,
                 date=tee_time.date,
                 start_time=tee_time.start_time_unf,
-                players_available=players_available
-            ).first()
-            
+                players_available=players_available).first()
+
             if existing_entry:
                 # Update existing entry - mark as available and update info
                 existing_entry.is_available = tee_time.is_available
@@ -61,10 +58,11 @@ class TeeTimeCacheService:
                 existing_entry.half_cart = getattr(tee_time, 'half_cart', None)
                 existing_entry.subtotal = tee_time.subtotal
                 existing_entry.restrictions = tee_time.restrictions
-                existing_entry.special_offer = getattr(tee_time, 'special_offer', False)
+                existing_entry.special_offer = getattr(tee_time,
+                                                       'special_offer', False)
                 existing_entry.last_seen_at = current_time
                 existing_entry.updated_at = current_time
-                
+
             else:
                 # Create new entry
                 new_entry = TeeTimeCache(
@@ -82,17 +80,17 @@ class TeeTimeCacheService:
                     restrictions=tee_time.restrictions,
                     special_offer=getattr(tee_time, 'special_offer', False),
                     is_available=tee_time.is_available,
-                    last_seen_at=current_time
-                )
+                    last_seen_at=current_time)
                 db.session.add(new_entry)
-        
+
         # Commit all changes
         db.session.commit()
         print(f"Cached {len(tee_times)} tee times successfully")
-    
+
     @staticmethod
-    def get_cached_tee_times(course_name: str = None, date: str = None, 
-                           available_only: bool = True) -> List[dict]:
+    def get_cached_tee_times(course_name: str = None,
+                             date: str = None,
+                             available_only: bool = True) -> List[dict]:
         """
         Retrieve cached tee times with optional filters.
         
@@ -105,33 +103,34 @@ class TeeTimeCacheService:
             List of tee time dictionaries
         """
         query = TeeTimeCache.query
-        
+
         if course_name:
             query = query.filter_by(course_name=course_name)
         if date:
             query = query.filter_by(date=date)
         if available_only:
             query = query.filter_by(is_available=True)
-            
-        results = query.order_by(TeeTimeCache.date, TeeTimeCache.start_time).all()
+
+        results = query.order_by(TeeTimeCache.date, TeeTimeCache.start_time,
+                                 TeeTimeCache.course_name).all()
         return [result.to_dict() for result in results]
-    
+
     @staticmethod
     def get_all_cached_tee_times(available_only: bool = True) -> List[dict]:
         """Get all cached tee times"""
-        return TeeTimeCacheService.get_cached_tee_times(available_only=available_only)
-    
+        return TeeTimeCacheService.get_cached_tee_times(
+            available_only=available_only)
+
     @staticmethod
     def cleanup_old_entries(days_old: int = 1):
         """Remove tee times older than specified days"""
         cutoff_date = datetime.utcnow().date()
-        
+
         old_entries = TeeTimeCache.query.filter(
-            TeeTimeCache.date < cutoff_date.strftime('%Y-%m-%d')
-        ).all()
-        
+            TeeTimeCache.date < cutoff_date.strftime('%Y-%m-%d')).all()
+
         for entry in old_entries:
             db.session.delete(entry)
-        
+
         db.session.commit()
         print(f"Cleaned up {len(old_entries)} old tee time entries")
