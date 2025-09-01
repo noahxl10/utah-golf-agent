@@ -11,7 +11,7 @@ from src.cache_service import TeeTimeCacheService
 
 
 app = Flask(__name__)
-CORS(app, origins="*")
+CORS(app, origins="*", supports_credentials=True, allow_headers="*", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
 app.config['DEBUG'] = True
 
 # Initialize database
@@ -69,7 +69,6 @@ def get_chronogolf_tee_times():
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
 
     return jsonify(data_to_return)
-
 
 @app.route('/api/teetimes', methods=['GET'])
 def get_all_tee_times():
@@ -176,11 +175,18 @@ def submit_course_request():
         }), 400
     
     new_request = CourseRequest(
-        course_name=data['course_name'],
-        phone_number=data['phone_number'],
-        course_id=data.get('course_id')
+        course_name=data.get("course_name"),
+        phone_number=data.get("phone_number"),
+        agree_to_notify=data.get('agree_to_notify', False),
+        datetime_created=data.get("timestamp")
+        # course_id=data.get('course_id')
     )
-    
+    # {
+    #   course_name: 'asdf',
+    #   phone_number: '(814) 969-9482',
+    #   agree_to_notify: true,
+    #   timestamp: '2025-09-01T18:18:19.921Z'
+    # }
     db.session.add(new_request)
     db.session.commit()
     

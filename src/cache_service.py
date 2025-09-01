@@ -116,7 +116,7 @@ class TeeTimeCacheService:
         results = query.order_by(
             cast(func.replace(TeeTimeCache.start_time, ":", ""),
                  Integer).asc()).all()
-
+        print(results[0])
         return [result.to_dict() for result in results]
 
     @staticmethod
