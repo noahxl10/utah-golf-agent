@@ -9,6 +9,7 @@ from src import test
 from src.models import db, init_db
 from src.cache_service import TeeTimeCacheService
 
+
 app = Flask(__name__)
 CORS(app, origins="*")
 app.config['DEBUG'] = True
@@ -21,11 +22,11 @@ init_db(app)
 def get_eaglewood_tee_times():
     date = request.args.get('date', '2025-09-01')
     tee_times = scraper.eaglewood_tee_times(date)
-    
+
     # Cache the tee times
     if tee_times:
         TeeTimeCacheService.cache_tee_times(tee_times, 'eaglewood')
-    
+
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
     return jsonify(data_to_return)
 
@@ -34,11 +35,11 @@ def get_eaglewood_tee_times():
 def get_foreup_tee_times():
     date = request.args.get('date', '2025-09-01')
     tee_times = scraper.foreup_tee_times(date)
-    
+
     # Cache the tee times
     if tee_times:
         TeeTimeCacheService.cache_tee_times(tee_times, 'foreup')
-    
+
     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
     return jsonify(data_to_return)
 
@@ -55,14 +56,27 @@ def get_chronogolf_tee_times():
 
 @app.route('/api/teetimes', methods=['GET'])
 def get_all_tee_times():
-    date = request.args.get('date', '2025-09-01')
-    tee_times = scraper.chronogolf_tee_times(date)
+    date = request.args.get('date', '2025-09-02')
     
+    c_tee_times = scraper.chronogolf_tee_times(date)
     # Cache the tee times
-    if tee_times:
-        TeeTimeCacheService.cache_tee_times(tee_times, 'chronogolf')
-    
-    data_to_return = [tee_time.model_dump() for tee_time in tee_times]
+    if c_tee_times:
+        TeeTimeCacheService.cache_tee_times(c_tee_times, 'chronogolf')
+
+    f_tee_times = scraper.foreup_tee_times(date)
+    # Cache the tee times
+    if f_tee_times:
+        TeeTimeCacheService.cache_tee_times(f_tee_times, 'foreup')
+
+    e_tee_times = scraper.eaglewood_tee_times(date)
+    # Cache the tee times
+    if e_tee_times:
+        TeeTimeCacheService.cache_tee_times(e_tee_times, 'eaglewood')
+
+    c_tee_times.extend(f_tee_times)
+    c_tee_times.extend(e_tee_times)
+
+    data_to_return = [tee_time.model_dump() for tee_time in c_tee_times]
     return jsonify(data_to_return)
 
 
@@ -92,7 +106,7 @@ def get_all_cached_tee_times():
     """Get all cached tee times"""
     date = request.args.get('date')
     available_only = request.args.get('available_only', 'true').lower() == 'true'
-    
+
     cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
         date=date, 
         available_only=available_only
@@ -109,13 +123,13 @@ def get_cached_tee_times_by_course(course_name):
     """Get cached tee times for a specific course"""
     date = request.args.get('date')
     available_only = request.args.get('available_only', 'true').lower() == 'true'
-    
+
     cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
         course_name=course_name,
         date=date,
         available_only=available_only
     )
-    
+
     return jsonify({
         'course_name': course_name,
         'count': len(cached_tee_times),
@@ -128,7 +142,7 @@ def cleanup_old_cache():
     """Clean up old cached tee times"""
     days_old = request.json.get('days_old', 1) if request.json else 1
     TeeTimeCacheService.cleanup_old_entries(days_old)
-    
+
     return jsonify({
         'message': f'Cleaned up tee times older than {days_old} days'
     })

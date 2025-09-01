@@ -153,7 +153,7 @@ def order_tee_times(tee_times: List[TeeTime]) -> List[TeeTime]:
     
     The primary sort key is 'start_time' (earliest to latest).
     The secondary sort key for breaking ties is 'course_name' (alphabetical).
-    
+
     Args:
         tee_times: A list of TeeTime objects.
         
