@@ -92,11 +92,8 @@ class TeeTimeCacheService:
         print(f"Cached {len(tee_times)} tee times successfully")
 
     @staticmethod
-    def get_cached_tee_times(
-        course_name: str = None,
-        available_only: bool = True
-    ) -> List[dict]:
-
+    def get_cached_tee_times(course_name: str = None,
+                             available_only: bool = True) -> List[dict]:
         """
         Retrieve cached tee times with optional filters.
         
@@ -110,13 +107,12 @@ class TeeTimeCacheService:
         """
         query = TeeTimeCache.query
 
-
         if course_name:
             query = query.filter_by(course_name=course_name)
         # if current_date:
         #     query = query.filter(TeeTimeCache.date >= current_date)
         # if current_time:
-            # mountain time
+        # mountain time
         # if available_only:
         #     query = query.filter_by(is_available=True)
 
@@ -127,16 +123,16 @@ class TeeTimeCacheService:
         # For future dates, include all times
         query = query.filter(
             or_(
-                TeeTimeCache.date > current_date,  # Future dates - include all times
+                TeeTimeCache.date
+                > current_date,  # Future dates - include all times
                 and_(
                     TeeTimeCache.date == current_date,  # Today's date
-                    TeeTimeCache.start_time >= cur_time.strftime("%H:%M"),  # Time >= current time
-                    TeeTimeCache.is_available
-                )
-            )
-        )
+                    TeeTimeCache.start_time
+                    >= cur_time.strftime("%H:%M"),  # Time >= current time
+                    TeeTimeCache.is_available)))
 
-        results = query.order_by(TeeTimeCache.start_time.asc()).all()
+        results = query.order_by(TeeTimeCache.date.asc(),
+                                 TeeTimeCache.start_time.asc()).all()
 
         if results:
             print(f"Found {len(results)} cached tee times")
@@ -145,13 +141,11 @@ class TeeTimeCacheService:
 
         return [result.to_dict() for result in results]
 
-
     @staticmethod
     def get_all_cached_tee_times(available_only: bool = True) -> List[dict]:
         """Get all cached tee times"""
         return TeeTimeCacheService.get_cached_tee_times(
             available_only=available_only)
-
 
     @staticmethod
     def get_available_dates() -> List[str]:
