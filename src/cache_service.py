@@ -109,6 +109,7 @@ class TeeTimeCacheService:
         if course_name:
             query = query.filter_by(course_name=course_name)
         if current_date:
+            print(current_date)
             query = query.filter(TeeTimeCache.date >= current_date)
         if available_only:
             query = query.filter_by(is_available=True)
@@ -129,6 +130,31 @@ class TeeTimeCacheService:
         """Get all cached tee times"""
         return TeeTimeCacheService.get_cached_tee_times(
             available_only=available_only)
+
+    @staticmethod
+    def get_available_dates() -> List[str]:
+        """
+        Get distinct available dates from cached tee times, filtered for current date or later.
+        
+        Returns:
+            List of date strings in YYYY-MM-DD format
+        """
+        from datetime import date
+        today = date.today().strftime('%Y-%m-%d')
+        
+        # Query for distinct dates where tee times are available and date is today or later
+        distinct_dates = db.session.query(TeeTimeCache.date)\
+            .filter(TeeTimeCache.is_available == True)\
+            .filter(TeeTimeCache.date >= today)\
+            .distinct()\
+            .order_by(TeeTimeCache.date)\
+            .all()
+        
+        # Extract date strings from the query result tuples
+        date_list = [date_tuple[0] for date_tuple in distinct_dates]
+        
+        print(f"Found {len(date_list)} available dates: {date_list}")
+        return date_list
 
     @staticmethod
     def cleanup_old_entries(days_old: int = 1):

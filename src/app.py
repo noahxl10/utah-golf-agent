@@ -33,6 +33,7 @@ def index():
             "/test_api/teetimes": "Get mock tee times for testing",
             "/api/cached_teetimes": "Get all cached tee times",
             "/api/cached_teetimes/<course_name>": "Get cached tee times for specific course",
+            "/api/available_dates": "Get distinct available dates from cached tee times",
             "/api/course_requests": "Submit (POST) or get (GET) course requests",
             "/api/course_requests/<id>/mark_added": "Mark course request as added (PATCH)"
         }
@@ -158,6 +159,13 @@ def get_cached_tee_times_by_course(course_name):
         'count': len(cached_tee_times),
         'tee_times': cached_tee_times
     })
+
+
+@app.route('/api/available_dates', methods=['GET'])
+def get_available_dates():
+    """Get distinct available dates from cached tee times"""
+    available_dates = TeeTimeCacheService.get_available_dates()
+    return jsonify(available_dates)
 
 
 @app.route('/api/cleanup_cache', methods=['POST'])
