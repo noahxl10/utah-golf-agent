@@ -257,7 +257,7 @@ def mark_course_added(request_id):
     })
 
 
-@app.route('/api/file_a_bug', methods=['POST'])
+@app.route('/api/bug-reports', methods=['POST'])
 def file_a_bug():
     """Submit a bug report"""
     data = request.get_json()
