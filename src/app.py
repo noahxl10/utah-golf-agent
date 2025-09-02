@@ -1,6 +1,6 @@
 from flask import Flask, Response, render_template, request, jsonify
 from flask_cors import CORS
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as dt_date
 import sys
 import os
 from src.config import courses
@@ -16,6 +16,10 @@ app.config['DEBUG'] = True
 
 # Initialize database
 init_db(app)
+
+
+def current_date():
+    return dt_date.today().strftime("%Y-%m-%d")
 
 
 @app.route('/')
@@ -120,11 +124,14 @@ def get_course_list():
 @app.route('/api/cached_teetimes', methods=['GET'])
 def get_all_cached_tee_times():
     """Get all cached tee times"""
-    date = request.args.get('date')
+    # date = request.args.get('date')
+
+    date = current_date()
+
     available_only = request.args.get('available_only', 'true').lower() == 'true'
 
     cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
-        date=date, 
+        current_date=date,
         available_only=available_only
     )
     return jsonify(cached_tee_times)

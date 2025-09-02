@@ -91,7 +91,7 @@ class TeeTimeCacheService:
 
     @staticmethod
     def get_cached_tee_times(course_name: str = None,
-                             date: str = None,
+                             current_date: str = None,
                              available_only: bool = True) -> List[dict]:
         """
         Retrieve cached tee times with optional filters.
@@ -108,15 +108,20 @@ class TeeTimeCacheService:
 
         if course_name:
             query = query.filter_by(course_name=course_name)
-        if date:
-            query = query.filter_by(date=date)
+        if current_date:
+            query = query.filter(TeeTimeCache.date >= current_date)
         if available_only:
             query = query.filter_by(is_available=True)
 
         results = query.order_by(
             cast(func.replace(TeeTimeCache.start_time, ":", ""),
                  Integer).asc()).all()
-        print(results[0])
+        
+        if results:
+            print(f"Found {len(results)} cached tee times")
+        else:
+            print("No cached tee times found")
+            
         return [result.to_dict() for result in results]
 
     @staticmethod
