@@ -23,19 +23,23 @@ class ScheduledJobs:
         print("TEST JOB RAN")
 
 
-    def run_get_all_tee_times(self):
+    def run_get_all_tee_times(self, days_offset=0):
         """Scheduled job to scrape and cache tee times from all providers"""
-        job_name = "run_get_all_tee_times"
+        job_name = f"run_get_all_tee_times_+{days_offset}_days"
         logger.info(f"Starting scheduled job: {job_name}")
 
         # Use Flask app context if provided
         def _execute_job():
             try:
-                current_date = misc.current_date()
-                logger.info(f"Scraping tee times for date: {current_date}")
+                # Calculate target date based on offset
+                base_date = datetime.now().date()
+                target_date = base_date + timedelta(days=days_offset)
+                target_date_str = target_date.strftime('%Y-%m-%d')
+
+                logger.info(f"Scraping tee times for date: {target_date_str} (offset: +{days_offset} days)")
 
                 # Scrape ChronoGolf
-                c_tee_times = scraper.chronogolf_tee_times(current_date)
+                c_tee_times = scraper.chronogolf_tee_times(target_date_str)
                 if c_tee_times:
                     TeeTimeCacheService.cache_tee_times(c_tee_times, 'chronogolf')
                     logger.info(f"Cached {len(c_tee_times)} ChronoGolf tee times")
@@ -43,7 +47,7 @@ class ScheduledJobs:
                     logger.warning("No ChronoGolf tee times found")
 
                 # Scrape ForeUp
-                f_tee_times = scraper.foreup_tee_times(current_date)
+                f_tee_times = scraper.foreup_tee_times(target_date_str)
                 if f_tee_times:
                     TeeTimeCacheService.cache_tee_times(f_tee_times, 'foreup')
                     logger.info(f"Cached {len(f_tee_times)} ForeUp tee times")
@@ -51,14 +55,14 @@ class ScheduledJobs:
                     logger.warning("No ForeUp tee times found")
 
                 # Scrape Eaglewood
-                e_tee_times = scraper.eaglewood_tee_times(current_date)
+                e_tee_times = scraper.eaglewood_tee_times(target_date_str)
                 if e_tee_times:
                     TeeTimeCacheService.cache_tee_times(e_tee_times, 'eaglewood')
                     logger.info(f"Cached {len(e_tee_times)} Eaglewood tee times")
                 else:
                     logger.warning("No Eaglewood tee times found")
 
-                total_tee_times = len(c_tee_times or []) + len(f_tee_times or [])
+                total_tee_times = len(c_tee_times or []) + len(f_tee_times or []) + len(e_tee_times or [])
                 logger.info(f"Job {job_name} completed successfully. Total tee times: {total_tee_times}")
                 return True
 
@@ -94,16 +98,35 @@ def add_jobs(scheduler: BackgroundScheduler, app: Flask = None) -> BackgroundSch
                 'start_date': datetime.now() + timedelta(seconds=10),  # Start immediately
                 # 'start_date': datetime.now(),  # Start immediately
             },
-            # Add more jobs here as needed:
+            # CURRENT DAY RUN
             {
-                'func': sj.run_get_all_tee_times,
+                'func': lambda: sj.run_get_all_tee_times(days_offset=0),
                 'trigger': 'interval',
-                'hours': 12,
-                'id': 'run_tee_times',
-                'name': 'scrape_cache_tee_times',
+                'hours': 3,
+                'id': 'run_tee_times_TODAY',
+                'name': 'scrape_cache_tee_times_TODAY',
                 'replace_existing': True,
                 'max_instances': 1,  # Prevent overlapping executions
-                'start_date': datetime.now() + timedelta(minutes=5),  # Start immediately
+            },
+             # CURRENT DAY + 1 DAY (E.G. TOMORROW)
+            {
+                'func': lambda: sj.run_get_all_tee_times(days_offset=1),
+                'trigger': 'interval',
+                'hours': 12,
+                'id': 'run_tee_times_TOMORROW',
+                'name': 'scrape_cache_tee_times_TOMORROW',
+                'replace_existing': True,
+                'max_instances': 1,  # Prevent overlapping executions
+            },
+             # CURRENT DATE + 2 DAYS (E.G. DAY AFTER TOMORROW)
+            {
+                'func': lambda: sj.run_get_all_tee_times(days_offset=2),
+                'trigger': 'interval',
+                'hours': 24,
+                'id': 'run_tee_times_DAY_AFTER_TOMORROW',
+                'name': 'scrape_cache_tee_times_DAY_AFTER_TOMORROW',
+                'replace_existing': True,
+                'max_instances': 1,  # Prevent overlapping executions
             }
         ]
 

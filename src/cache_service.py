@@ -131,7 +131,7 @@ class TeeTimeCacheService:
                 and_(
                     TeeTimeCache.date == current_date,  # Today's date
                     TeeTimeCache.start_time >= cur_time.strftime("%H:%M"),  # Time >= current time
-                    TeeTimeCache.is_available == True
+                    TeeTimeCache.is_available
                 )
             )
         )
@@ -142,7 +142,7 @@ class TeeTimeCacheService:
             print(f"Found {len(results)} cached tee times")
         else:
             print("No cached tee times found")
- 
+
         return [result.to_dict() for result in results]
 
 
@@ -163,7 +163,7 @@ class TeeTimeCacheService:
         """
         from datetime import date
         today = date.today().strftime('%Y-%m-%d')
-        
+
         # Query for distinct dates where tee times are available and date is today or later
         distinct_dates = db.session.query(TeeTimeCache.date)\
             .filter(TeeTimeCache.is_available == True)\
@@ -171,10 +171,10 @@ class TeeTimeCacheService:
             .distinct()\
             .order_by(TeeTimeCache.date)\
             .all()
-        
+
         # Extract date strings from the query result tuples
         date_list = [date_tuple[0] for date_tuple in distinct_dates]
-        
+
         print(f"Found {len(date_list)} available dates: {date_list}")
         return date_list
 
