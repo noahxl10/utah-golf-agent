@@ -80,7 +80,7 @@ def rate_limit(requests_per_minute: int = 60, window_minutes: int = 1, per_ip: b
 
 def log_request():
     def decorator(func):
-        import inspect_
+        import inspect
         sig = inspect.signature(func)
         # db.add_error_log(
         #     ErrorLog(
