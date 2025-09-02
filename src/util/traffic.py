@@ -1,22 +1,93 @@
-# """
-#     Some base traffic decorators and functions
-# """
-# from functools import wraps
-# import time
-# from typing.errors import (
-#     RequestError
-# )
+"""
+    Some base traffic decorators and functions
+"""
+from functools import wraps
+import time
+from collections import defaultdict
+from datetime import datetime, timedelta
+from flask import request, jsonify, g
 
-# def log_request():
-#     def decorator(func):
-#         import inspect_
-#         sig = inspect.signature(func)
-#         # db.add_error_log(
-#         #     ErrorLog(
-#         #       endpoint_name = ""
-#         #     )
-#         # )
-#         pass
+
+# NEED TO SWITCH TO REDIS SOON
+rate_limit_storage = defaultdict(list)
+
+
+def rate_limit(requests_per_minute: int = 60, window_minutes: int = 1, per_ip: bool = True):
+    """
+    Rate limit decorator for Flask endpoints
+    
+    Args:
+        requests_per_minute: Maximum requests allowed per window
+        window_minutes: Time window in minutes
+        per_ip: Whether to rate limit per IP (True) or globally (False)
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            now = datetime.now()
+
+            # Determine the key for rate limiting
+            if per_ip:
+                # Get client IP address
+                client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+                if client_ip and ',' in client_ip:
+                    client_ip = client_ip.split(',')[0].strip()
+                key = f"{func.__name__}:{client_ip}"
+            else:
+                key = f"{func.__name__}:global"
+
+            # Clean old entries outside the window
+            cutoff_time = now - timedelta(minutes=window_minutes)
+            rate_limit_storage[key] = [
+                timestamp for timestamp in rate_limit_storage[key] 
+                if timestamp > cutoff_time
+            ]
+
+            # Check if rate limit exceeded
+            current_requests = len(rate_limit_storage[key])
+            if current_requests >= requests_per_minute:
+                return jsonify({
+                    'error': 'Rate limit exceeded',
+                    'message': f'Maximum {requests_per_minute} requests per {window_minutes} minute(s) allowed',
+                    'retry_after': 60  # seconds
+                }), 429
+
+            # Add current request timestamp
+            rate_limit_storage[key].append(now)
+
+            # Add rate limit headers to response
+            response = func(*args, **kwargs)
+
+            # If response is a tuple (response, status_code), handle it
+            if isinstance(response, tuple):
+                resp_data, status_code = response
+                if hasattr(resp_data, 'headers'):
+                    resp_data.headers['X-RateLimit-Limit'] = str(requests_per_minute)
+                    resp_data.headers['X-RateLimit-Remaining'] = str(requests_per_minute - current_requests - 1)
+                    resp_data.headers['X-RateLimit-Reset'] = str(int((now + timedelta(minutes=window_minutes)).timestamp()))
+                return resp_data, status_code
+            # If response has headers attribute (Flask Response object)
+            elif hasattr(response, 'headers'):
+                response.headers['X-RateLimit-Limit'] = str(requests_per_minute)
+                response.headers['X-RateLimit-Remaining'] = str(requests_per_minute - current_requests - 1)
+                response.headers['X-RateLimit-Reset'] = str(int((now + timedelta(minutes=window_minutes)).timestamp()))
+
+            return response
+
+        return wrapper
+    return decorator
+
+
+def log_request():
+    def decorator(func):
+        import inspect_
+        sig = inspect.signature(func)
+        # db.add_error_log(
+        #     ErrorLog(
+        #       endpoint_name = ""
+        #     )
+        # )
+        pass
 
 
 # # def rate_limiter(func):

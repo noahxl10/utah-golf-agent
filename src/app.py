@@ -9,8 +9,10 @@ from src.scraper import scraper
 from src import test
 from src.models import db, init_db, CourseRequest, BugReport
 from src.cache_service import TeeTimeCacheService
-from src.util import misc
-from src.util import sched
+from src.util import (
+    sched,
+    traffic,
+)
 
 app = Flask(__name__)
 CORS(app, origins="*", supports_credentials=True, allow_headers="*", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
@@ -43,6 +45,7 @@ except Exception as e:
 
 
 @app.route('/')
+@traffic.rate_limit()
 def index():
     return jsonify({
         "message": "Utah Golf Booking API",
@@ -124,6 +127,7 @@ def index():
 
 
 @app.route('/test_api/teetimes', methods=['GET'])
+@traffic.rate_limit()
 def test_get_all_tee_times():
     """
     This endpoint fetches a list of TeeTime objects and returns them as a JSON array.
@@ -138,6 +142,7 @@ def test_get_all_tee_times():
 
 
 @app.route("/api/courses", methods=['GET'])
+@traffic.rate_limit()
 def get_course_list():
     course_list = [course for course in courses]
     response = jsonify(course_list)
@@ -145,6 +150,7 @@ def get_course_list():
 
 
 @app.route('/api/cached_teetimes', methods=['GET'])
+@traffic.rate_limit()
 def get_all_cached_tee_times():
     """Get all cached tee times"""
     # date = request.args.get('date')
@@ -164,6 +170,7 @@ def get_all_cached_tee_times():
 
 
 @app.route('/api/cached_teetimes/<course_name>', methods=['GET'])
+@traffic.rate_limit()
 def get_cached_tee_times_by_course(course_name):
     """Get cached tee times for a specific course"""
     date = request.args.get('date')
@@ -182,6 +189,7 @@ def get_cached_tee_times_by_course(course_name):
 
 
 @app.route('/api/available_dates', methods=['GET'])
+@traffic.rate_limit()
 def get_available_dates():
     """Get distinct available dates from cached tee times"""
     available_dates = TeeTimeCacheService.get_available_dates()
@@ -189,6 +197,7 @@ def get_available_dates():
 
 
 @app.route('/api/cleanup_cache', methods=['POST'])
+@traffic.rate_limit()
 def cleanup_old_cache():
     """Clean up old cached tee times"""
     days_old = request.json.get('days_old', 1) if request.json else 1
@@ -200,6 +209,7 @@ def cleanup_old_cache():
 
 
 @app.route('/api/course_requests', methods=['POST'])
+@traffic.rate_limit()
 def submit_course_request():
     """Submit a new course request"""
     data = request.get_json()
@@ -225,6 +235,7 @@ def submit_course_request():
 
 
 @app.route('/api/course_requests', methods=['GET'])
+@traffic.rate_limit()
 def get_course_requests():
     """Get all course requests"""
     added_only = request.args.get('added_only', 'false').lower() == 'true'
@@ -242,6 +253,7 @@ def get_course_requests():
 
 
 @app.route('/api/course_requests/<int:request_id>/mark_added', methods=['PATCH'])
+@traffic.rate_limit()
 def mark_course_added(request_id):
     """Mark a course request as added to the site"""
     course_request = CourseRequest.query.get_or_404(request_id)
@@ -258,6 +270,7 @@ def mark_course_added(request_id):
 
 
 @app.route('/api/bug-reports', methods=['POST'])
+@traffic.rate_limit()
 def file_a_bug():
     """Submit a bug report"""
     data = request.get_json()
