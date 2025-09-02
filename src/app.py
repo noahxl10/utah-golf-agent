@@ -7,7 +7,7 @@ import atexit
 from src.config import courses
 from src.scraper import scraper
 from src import test
-from src.models import db, init_db, CourseRequest
+from src.models import db, init_db, CourseRequest, BugReport
 from src.cache_service import TeeTimeCacheService
 from src.util import misc
 from src.util import sched
@@ -55,7 +55,8 @@ def index():
             "/api/cached_teetimes/<course_name>": "Get cached tee times for specific course",
             "/api/available_dates": "Get distinct available dates from cached tee times",
             "/api/course_requests": "Submit (POST) or get (GET) course requests",
-            "/api/course_requests/<id>/mark_added": "Mark course request as added (PATCH)"
+            "/api/course_requests/<id>/mark_added": "Mark course request as added (PATCH)",
+            "/api/file_a_bug": "Submit bug reports (POST)"
         }
     })
 
@@ -254,3 +255,45 @@ def mark_course_added(request_id):
         'message': 'Course request marked as added',
         'request': course_request.to_dict()
     })
+
+
+@app.route('/api/file_a_bug', methods=['POST'])
+def file_a_bug():
+    """Submit a bug report"""
+    data = request.get_json()
+    
+    if not data or not data.get('description'):
+        return jsonify({
+            'error': 'Missing required field: description'
+        }), 400
+    
+    # Get client IP address (handles proxy forwarding)
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        ip_address = request.environ['REMOTE_ADDR']
+    else:
+        ip_address = request.environ['HTTP_X_FORWARDED_FOR']
+    
+    # Parse frontend timestamp if provided
+    frontend_timestamp = None
+    if data.get('timestamp'):
+        try:
+            from datetime import datetime
+            frontend_timestamp = datetime.fromisoformat(data.get('timestamp').replace('Z', '+00:00'))
+        except:
+            pass  # If parsing fails, just use None
+    
+    new_bug_report = BugReport(
+        description=data.get('description'),
+        timestamp=frontend_timestamp,
+        url=data.get('url'),
+        user_agent=data.get('userAgent'),
+        ip_address=ip_address
+    )
+    
+    db.session.add(new_bug_report)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Bug report submitted successfully',
+        'report': new_bug_report.to_dict()
+    }), 201

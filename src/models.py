@@ -132,6 +132,33 @@ class CourseRequest(db.Model):
         }
 
 
+class BugReport(db.Model):
+    __tablename__ = 'bug_reports'
+
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=True)  # Frontend provided timestamp
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)  # Backend timestamp
+    url = db.Column(db.String(500), nullable=True)
+    user_agent = db.Column(db.Text, nullable=True)
+    ip_address = db.Column(db.String(45), nullable=False)  # IPv6 can be up to 45 chars
+
+    def __repr__(self):
+        return f'<BugReport {self.id} from {self.ip_address}>'
+
+    def to_dict(self):
+        """Convert to dictionary for JSON serialization"""
+        return {
+            'id': self.id,
+            'description': self.description,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'date_created': self.date_created.isoformat() if self.date_created else None,
+            'url': self.url,
+            'user_agent': self.user_agent,
+            'ip_address': self.ip_address
+        }
+
+
 def init_db(app):
     """Initialize the database with Flask app context"""
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
