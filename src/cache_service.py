@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 from src.models import db, TeeTimeCache
 from src._typing.structs import TeeTime
-from sqlalchemy import func, Integer
+from sqlalchemy import func, Integer, or_, and_
 from sqlalchemy.sql.expression import cast
+import pytz
+from src.util import misc
 
 
 class TeeTimeCacheService:
@@ -90,9 +92,11 @@ class TeeTimeCacheService:
         print(f"Cached {len(tee_times)} tee times successfully")
 
     @staticmethod
-    def get_cached_tee_times(course_name: str = None,
-                             current_date: str = None,
-                             available_only: bool = True) -> List[dict]:
+    def get_cached_tee_times(
+        course_name: str = None,
+        available_only: bool = True
+    ) -> List[dict]:
+
         """
         Retrieve cached tee times with optional filters.
         
@@ -106,28 +110,48 @@ class TeeTimeCacheService:
         """
         query = TeeTimeCache.query
 
+
         if course_name:
             query = query.filter_by(course_name=course_name)
-        if current_date:
-            print(current_date)
-            query = query.filter(TeeTimeCache.date >= current_date)
-        if available_only:
-            query = query.filter_by(is_available=True)
+        # if current_date:
+        #     query = query.filter(TeeTimeCache.date >= current_date)
+        # if current_time:
+            # mountain time
+        # if available_only:
+        #     query = query.filter_by(is_available=True)
+
+        current_date = misc.current_date()
+
+        cur_time = datetime.now(pytz.timezone('America/Denver'))
+        # For tee times on today's date, filter by current time
+        # For future dates, include all times
+        query = query.filter(
+            or_(
+                TeeTimeCache.date > current_date,  # Future dates - include all times
+                and_(
+                    TeeTimeCache.date == current_date,  # Today's date
+                    TeeTimeCache.start_time >= cur_time.strftime("%H:%M"),  # Time >= current time
+                    TeeTimeCache.is_available == True
+                )
+            )
+        )
 
         results = query.order_by(TeeTimeCache.start_time.asc()).all()
-        
+
         if results:
             print(f"Found {len(results)} cached tee times")
         else:
             print("No cached tee times found")
-            
+ 
         return [result.to_dict() for result in results]
+
 
     @staticmethod
     def get_all_cached_tee_times(available_only: bool = True) -> List[dict]:
         """Get all cached tee times"""
         return TeeTimeCacheService.get_cached_tee_times(
             available_only=available_only)
+
 
     @staticmethod
     def get_available_dates() -> List[str]:

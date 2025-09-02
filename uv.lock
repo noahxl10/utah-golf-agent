@@ -923,6 +923,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "pytz" },
     { name = "requests" },
 ]
 
@@ -938,6 +939,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
+    { name = "pytz", specifier = ">=2025.2" },
     { name = "requests", specifier = ">=2.32.5" },
 ]
 

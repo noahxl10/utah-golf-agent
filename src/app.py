@@ -60,66 +60,66 @@ def index():
     })
 
 
-@app.route('/api/eaglewood_teetimes', methods=['GET'])
-def get_eaglewood_tee_times():
-    date = request.args.get('date')
-    tee_times = scraper.eaglewood_tee_times(date)
+# @app.route('/api/eaglewood_teetimes', methods=['GET'])
+# def get_eaglewood_tee_times():
+#     date = request.args.get('date')
+#     tee_times = scraper.eaglewood_tee_times(date)
 
-    # Cache the tee times
-    if tee_times:
-        TeeTimeCacheService.cache_tee_times(tee_times, 'eaglewood')
+#     # Cache the tee times
+#     if tee_times:
+#         TeeTimeCacheService.cache_tee_times(tee_times, 'eaglewood')
 
-    data_to_return = [tee_time.model_dump() for tee_time in tee_times]
-    return jsonify(data_to_return)
-
-
-@app.route('/api/foreup_teetimes', methods=['GET'])
-def get_foreup_tee_times():
-    date = request.args.get('date')
-    tee_times = scraper.foreup_tee_times(date)
-
-    # Cache the tee times
-    if tee_times:
-        TeeTimeCacheService.cache_tee_times(tee_times, 'foreup')
-
-    data_to_return = [tee_time.model_dump() for tee_time in tee_times]
-    return jsonify(data_to_return)
+#     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
+#     return jsonify(data_to_return)
 
 
-@app.route('/api/chronogolf_teetimes', methods=['GET'])
-def get_chronogolf_tee_times():
-    date = "2025-09-01"
-    tee_times = scraper.chronogolf_tee_times(date)
-    # print(tee_times[0])
-    data_to_return = [tee_time.model_dump() for tee_time in tee_times]
+# @app.route('/api/foreup_teetimes', methods=['GET'])
+# def get_foreup_tee_times():
+#     date = request.args.get('date')
+#     tee_times = scraper.foreup_tee_times(date)
 
-    return jsonify(data_to_return)
+#     # Cache the tee times
+#     if tee_times:
+#         TeeTimeCacheService.cache_tee_times(tee_times, 'foreup')
+
+#     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
+#     return jsonify(data_to_return)
 
 
-@app.route('/api/teetimes', methods=['GET'])
-def get_all_tee_times():
-    date = request.args.get('date')
+# @app.route('/api/chronogolf_teetimes', methods=['GET'])
+# def get_chronogolf_tee_times():
+#     date = "2025-09-01"
+#     tee_times = scraper.chronogolf_tee_times(date)
+#     # print(tee_times[0])
+#     data_to_return = [tee_time.model_dump() for tee_time in tee_times]
 
-    c_tee_times = scraper.chronogolf_tee_times(date)
-    # Cache the tee times
-    if c_tee_times:
-        TeeTimeCacheService.cache_tee_times(c_tee_times, 'chronogolf')
+#     return jsonify(data_to_return)
 
-    f_tee_times = scraper.foreup_tee_times(date)
-    # Cache the tee times
-    if f_tee_times:
-        TeeTimeCacheService.cache_tee_times(f_tee_times, 'foreup')
 
-    e_tee_times = scraper.eaglewood_tee_times(date)
-    # Cache the tee times
-    if e_tee_times:
-        TeeTimeCacheService.cache_tee_times(e_tee_times, 'eaglewood')
+# @app.route('/api/teetimes', methods=['GET'])
+# def get_all_tee_times():
+#     date = request.args.get('date')
 
-    c_tee_times.extend(f_tee_times)
-    c_tee_times.extend(e_tee_times)
+#     c_tee_times = scraper.chronogolf_tee_times(date)
+#     # Cache the tee times
+#     if c_tee_times:
+#         TeeTimeCacheService.cache_tee_times(c_tee_times, 'chronogolf')
 
-    data_to_return = [tee_time.model_dump() for tee_time in c_tee_times]
-    return jsonify(data_to_return)
+#     f_tee_times = scraper.foreup_tee_times(date)
+#     # Cache the tee times
+#     if f_tee_times:
+#         TeeTimeCacheService.cache_tee_times(f_tee_times, 'foreup')
+
+#     e_tee_times = scraper.eaglewood_tee_times(date)
+#     # Cache the tee times
+#     if e_tee_times:
+#         TeeTimeCacheService.cache_tee_times(e_tee_times, 'eaglewood')
+
+#     c_tee_times.extend(f_tee_times)
+#     c_tee_times.extend(e_tee_times)
+
+#     data_to_return = [tee_time.model_dump() for tee_time in c_tee_times]
+#     return jsonify(data_to_return)
 
 
 @app.route('/test_api/teetimes', methods=['GET'])
@@ -148,12 +148,11 @@ def get_all_cached_tee_times():
     """Get all cached tee times"""
     # date = request.args.get('date')
 
-    date = misc.current_date()
+    # date = misc.current_date()
 
     available_only = request.args.get('available_only', 'true').lower() == 'true'
 
     cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
-        current_date=date,
         available_only=available_only
     )
     return jsonify(cached_tee_times)
@@ -171,7 +170,6 @@ def get_cached_tee_times_by_course(course_name):
 
     cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
         course_name=course_name,
-        current_date=date,
         available_only=available_only
     )
 
