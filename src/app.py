@@ -150,7 +150,7 @@ def get_cached_tee_times_by_course(course_name):
 
     cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
         course_name=course_name,
-        date=date,
+        current_date=date,
         available_only=available_only
     )
 

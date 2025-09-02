@@ -114,9 +114,7 @@ class TeeTimeCacheService:
         if available_only:
             query = query.filter_by(is_available=True)
 
-        results = query.order_by(
-            cast(func.replace(TeeTimeCache.start_time, ":", ""),
-                 Integer).asc()).all()
+        results = query.order_by(TeeTimeCache.start_time.asc()).all()
         
         if results:
             print(f"Found {len(results)} cached tee times")
