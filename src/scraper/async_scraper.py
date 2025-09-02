@@ -4,9 +4,10 @@ from typing import List, Dict, Any
 from src.config import courses
 import os
 import traceback
-from src.scraper.apis.chronogolf import V1, V2
-from src.scraper.apis.eaglewood import Eaglewood
-from src.scraper.apis.foreup import Foreup
+import asyncio
+from src.scraper.apis.async_chronogolf import AsyncV1, AsyncV2
+from src.scraper.apis.async_eaglewood import AsyncEaglewood
+from src.scraper.apis.async_foreup import AsyncForeup
 from src._typing.structs import (
     Course,
     TeeTimeParameter,
@@ -14,30 +15,31 @@ from src._typing.structs import (
 )
 
 
-def chronogolf_v2_api(tee_time_parameter):
+async def chronogolf_v2_api(tee_time_parameter):
     tee_times = []
     try:
-        v2 = V2(tee_time_parameter.course)
-        tee_times = v2.get_tee_times(tee_time_parameter)
+        v2 = AsyncV2(tee_time_parameter.course)
+        tee_times = await v2.get_tee_times(tee_time_parameter)
     except Exception as e:
         print(e)
     return tee_times
 
 
-def chronogolf_v1_api(tee_time_parameter):
+async def chronogolf_v1_api(tee_time_parameter):
     tee_times = []
     try:
-        v1 = V1(tee_time_parameter.course)
-        tee_times.extend(v1.get_tee_times(tee_time_parameter))
+        v1 = AsyncV1(tee_time_parameter.course)
+        tee_times.extend(await v1.get_tee_times(tee_time_parameter))
         return tee_times
     except Exception as e:
         print(e)
     return tee_times
 
 
-def chronogolf_tee_times(date):
+async def chronogolf_tee_times(date):
 
     all_tee_times = []
+    tasks = []
 
     for course_name in courses:
         try:
@@ -61,22 +63,26 @@ def chronogolf_tee_times(date):
                 course=course,
             )
 
-            tee_times = []
             if course_details.get("provider") == "chronogolf":
                 if sub_details.get("version") == "marketplaceV1":
-                    tee_times.extend(chronogolf_v1_api(ttp))
-
+                    tasks.append(chronogolf_v1_api(ttp))
                 elif sub_details.get("version") == "marketplaceV2":
-                    tee_times.extend(chronogolf_v2_api(ttp))
-
-            all_tee_times.extend(tee_times)
+                    tasks.append(chronogolf_v2_api(ttp))
+                    
         except Exception as e:
             print(traceback.format_exc())
+
+    # Run all chronogolf requests concurrently
+    if tasks:
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in results:
+            if isinstance(result, list):
+                all_tee_times.extend(result)
 
     return all_tee_times
 
 
-def eaglewood_tee_times(date):
+async def eaglewood_tee_times(date):
     tee_times = []
     try:
         course_name = "Eaglewood Golf Course"
@@ -99,17 +105,18 @@ def eaglewood_tee_times(date):
             holes=[18],
             course=course,
         )
-        eaglewood = Eaglewood(course)
-        tee_times.extend(eaglewood.get_tee_times(ttp))
+        eaglewood = AsyncEaglewood(course)
+        tee_times.extend(await eaglewood.get_tee_times(ttp))
     except Exception as e:
         print(e)
 
     return tee_times
 
 
-def foreup_tee_times(date):
+async def foreup_tee_times(date):
 
     all_tee_times = []
+    tasks = []
 
     for course_name in courses:
         try:
@@ -132,15 +139,18 @@ def foreup_tee_times(date):
                     course=course,
                 )
 
-                foreup = Foreup(course)
-
-                tee_times = []
-                tee_times.extend(foreup.get_tee_times(ttp))
-                
-                all_tee_times.extend(tee_times)
+                foreup = AsyncForeup(course)
+                tasks.append(foreup.get_tee_times(ttp))
 
         except Exception as e:
             print(traceback.format_exc())
+
+    # Run all foreup requests concurrently
+    if tasks:
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in results:
+            if isinstance(result, list):
+                all_tee_times.extend(result)
 
     return all_tee_times
 
@@ -175,21 +185,28 @@ def sort_tee_times_in_place(tee_times: List[TeeTime]) -> None:
     tee_times.sort(key=lambda tee_time: (tee_time.start_time, tee_time.course_name))
 
 
-def get_all_tee_times(date):
+async def get_all_tee_times(date):
 
+    # Run all API calls concurrently
+    foreup_task = foreup_tee_times(date)
+    eaglewood_task = eaglewood_tee_times(date)
+    chronogolf_task = chronogolf_tee_times(date)
+    
+    results = await asyncio.gather(foreup_task, eaglewood_task, chronogolf_task)
+    
     all_times = []
-    all_times.extend(foreup_tee_times(date))
-    all_times.extend(eaglewood_tee_times(date))
-    all_times.extend(chronogolf_tee_times(date))
+    for result in results:
+        all_times.extend(result)
 
     all_times_ordered = order_tee_times(all_times)
 
     return all_times_ordered
 
 
-# x = get_all_tee_times("2025-09-03")
-# print(x)
-# x = eaglewood_tee_times("2025-09-03") # "9:30 AM" 4:30 PM
-# x = foreup_tee_times("2025-09-03") # 17:15
-# x = chronogolf_tee_times("2025-09-05") 
-# print(x)
+# Example usage:
+# async def main():
+#     x = await get_all_tee_times("2025-09-03")
+#     print(x)
+
+# if __name__ == "__main__":
+#     asyncio.run(main())

@@ -1,14 +1,16 @@
 from flask import Flask, Response, render_template, request, jsonify
 from flask_cors import CORS
 from datetime import datetime, timedelta, date as dt_date
-import sys
-import os
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
+
 from src.config import courses
 from src.scraper import scraper
 from src import test
 from src.models import db, init_db, CourseRequest
 from src.cache_service import TeeTimeCacheService
-
+from src.util import misc
+from src.util import sched
 
 app = Flask(__name__)
 CORS(app, origins="*", supports_credentials=True, allow_headers="*", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
@@ -18,8 +20,26 @@ app.config['DEBUG'] = True
 init_db(app)
 
 
-def current_date():
-    return dt_date.today().strftime("%Y-%m-%d")
+# Initialize scheduler (only in main process)
+# import os
+# if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+try:
+    scheduler = BackgroundScheduler(timezone='UTC')
+    scheduler = sched.add_jobs(scheduler, app)  # Pass Flask app for context
+    scheduler.start()
+    print("✓ Scheduler started successfully")
+
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown() if scheduler else None)
+except Exception as e:
+    print(f"✗ Failed to start scheduler: {e}")
+    import traceback
+    print(traceback.format_exc())
+    # Continue running without scheduler rather than crashing
+    scheduler = None
+# else:
+#     print("Skipping scheduler initialization in reloader process")
+#     scheduler = None
 
 
 @app.route('/')
@@ -42,7 +62,7 @@ def index():
 
 @app.route('/api/eaglewood_teetimes', methods=['GET'])
 def get_eaglewood_tee_times():
-    date = request.args.get('date', '2025-09-01')
+    date = request.args.get('date')
     tee_times = scraper.eaglewood_tee_times(date)
 
     # Cache the tee times
@@ -55,7 +75,7 @@ def get_eaglewood_tee_times():
 
 @app.route('/api/foreup_teetimes', methods=['GET'])
 def get_foreup_tee_times():
-    date = request.args.get('date', '2025-09-01')
+    date = request.args.get('date')
     tee_times = scraper.foreup_tee_times(date)
 
     # Cache the tee times
@@ -75,10 +95,11 @@ def get_chronogolf_tee_times():
 
     return jsonify(data_to_return)
 
+
 @app.route('/api/teetimes', methods=['GET'])
 def get_all_tee_times():
-    date = request.args.get('date', '2025-09-02')
-    
+    date = request.args.get('date')
+
     c_tee_times = scraper.chronogolf_tee_times(date)
     # Cache the tee times
     if c_tee_times:
@@ -127,7 +148,7 @@ def get_all_cached_tee_times():
     """Get all cached tee times"""
     # date = request.args.get('date')
 
-    date = current_date()
+    date = misc.current_date()
 
     available_only = request.args.get('available_only', 'true').lower() == 'true'
 
@@ -183,28 +204,21 @@ def cleanup_old_cache():
 def submit_course_request():
     """Submit a new course request"""
     data = request.get_json()
-    
+
     if not data or not data.get('course_name') or not data.get('phone_number'):
         return jsonify({
             'error': 'Missing required fields: course_name and phone_number'
         }), 400
-    
+
     new_request = CourseRequest(
         course_name=data.get("course_name"),
         phone_number=data.get("phone_number"),
         agree_to_notify=data.get('agree_to_notify', False),
         datetime_created=data.get("timestamp")
-        # course_id=data.get('course_id')
     )
-    # {
-    #   course_name: 'asdf',
-    #   phone_number: '(814) 969-9482',
-    #   agree_to_notify: true,
-    #   timestamp: '2025-09-01T18:18:19.921Z'
-    # }
     db.session.add(new_request)
     db.session.commit()
-    
+
     return jsonify({
         'message': 'Course request submitted successfully',
         'request': new_request.to_dict()
@@ -215,13 +229,13 @@ def submit_course_request():
 def get_course_requests():
     """Get all course requests"""
     added_only = request.args.get('added_only', 'false').lower() == 'true'
-    
+
     query = CourseRequest.query
     if added_only:
         query = query.filter_by(is_added=True)
-    
+
     requests = query.order_by(CourseRequest.datetime_created.desc()).all()
-    
+
     return jsonify({
         'count': len(requests),
         'requests': [req.to_dict() for req in requests]
@@ -232,12 +246,12 @@ def get_course_requests():
 def mark_course_added(request_id):
     """Mark a course request as added to the site"""
     course_request = CourseRequest.query.get_or_404(request_id)
-    
+
     course_request.is_added = True
     course_request.datetime_added_to_site = datetime.utcnow()
-    
+
     db.session.commit()
-    
+
     return jsonify({
         'message': 'Course request marked as added',
         'request': course_request.to_dict()
