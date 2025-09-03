@@ -24,8 +24,8 @@ init_db(app)
 
 
  # Initialize vars for caching
-cache_tee_time_data = None
-cache_tee_time_time = 0
+cached_tee_time_data = None
+cached_tee_time_time = 0
 CACHE_TTL = 30 * 60  # 30 minutes in seconds
 
 
@@ -173,12 +173,12 @@ def get_all_cached_tee_times():
     
     # available_only = request.args.get('available_only', 'true').lower() == 'true'
 
-    global cached_tee_time_data, cache_tee_time_time
+    global cached_tee_time_data, cached_tee_time_time
     now = time.time()
 
     if cached_tee_time_data is None or (now - cache_tee_time_time) > CACHE_TTL:
         cached_tee_time_data = fetch_tee_times_from_db()
-        cache_tee_time_time = now
+        cached_tee_time_time = now
 
     return jsonify(cached_tee_time_data)
     # return jsonify({
