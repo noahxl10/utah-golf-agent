@@ -3,6 +3,7 @@ from flask_cors import CORS
 from datetime import datetime, timedelta, date as dt_date
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
+import time 
 
 from src.config import courses
 from src.scraper import scraper
