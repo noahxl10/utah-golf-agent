@@ -22,6 +22,19 @@ app.config['DEBUG'] = True
 init_db(app)
 
 
+ # Initialize vars for caching
+cache_tee_time_data = None
+cache_tee_time_time = 0
+CACHE_TTL = 30 * 60  # 30 minutes in seconds
+
+
+def fetch_tee_times_from_db():
+    # Replace with your actual DB query
+    return TeeTimeCacheService.get_cached_tee_times(
+        available_only=True
+    )
+
+
 # Initialize scheduler (only in main process)
 # import os
 # if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
@@ -156,13 +169,17 @@ def get_all_cached_tee_times():
     # date = request.args.get('date')
 
     # date = misc.current_date()
+    
+    # available_only = request.args.get('available_only', 'true').lower() == 'true'
 
-    available_only = request.args.get('available_only', 'true').lower() == 'true'
+    global cached_tee_time_data, cache_tee_time_time
+    now = time.time()
 
-    cached_tee_times = TeeTimeCacheService.get_cached_tee_times(
-        available_only=available_only
-    )
-    return jsonify(cached_tee_times)
+    if cache_data is None or (now - cache_time) > CACHE_TTL:
+        cached_tee_time_data = fetch_tee_times_from_db()
+        cache_tee_time_time = now
+
+    return jsonify(cached_tee_time_data)
     # return jsonify({
     #     'count': len(cached_tee_times),
     #     'tee_times': cached_tee_times
