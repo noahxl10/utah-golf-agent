@@ -107,6 +107,7 @@ def add_jobs(scheduler: BackgroundScheduler, app: Flask = None) -> BackgroundSch
                 'name': 'scrape_cache_tee_times_TODAY',
                 'replace_existing': True,
                 'max_instances': 1,  # Prevent overlapping executions
+                'start_date': datetime.now() + timedelta(seconds=10),
             },
              # CURRENT DAY + 1 DAY (E.G. TOMORROW)
             {
@@ -117,6 +118,7 @@ def add_jobs(scheduler: BackgroundScheduler, app: Flask = None) -> BackgroundSch
                 'name': 'scrape_cache_tee_times_TOMORROW',
                 'replace_existing': True,
                 'max_instances': 1,  # Prevent overlapping executions
+                'start_date': datetime.now() + timedelta(seconds=30),
             },
              # CURRENT DATE + 2 DAYS (E.G. DAY AFTER TOMORROW)
             {
@@ -127,6 +129,7 @@ def add_jobs(scheduler: BackgroundScheduler, app: Flask = None) -> BackgroundSch
                 'name': 'scrape_cache_tee_times_DAY_AFTER_TOMORROW',
                 'replace_existing': True,
                 'max_instances': 1,  # Prevent overlapping executions
+                'start_date': datetime.now() + timedelta(seconds=100),
             }
         ]
 
