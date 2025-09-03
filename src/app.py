@@ -176,7 +176,7 @@ def get_all_cached_tee_times():
     global cached_tee_time_data, cached_tee_time_time
     now = time.time()
 
-    if cached_tee_time_data is None or (now - cache_tee_time_time) > CACHE_TTL:
+    if cached_tee_time_data is None or (now - cached_tee_time_time) > CACHE_TTL:
         cached_tee_time_data = fetch_tee_times_from_db()
         cached_tee_time_time = now
 
