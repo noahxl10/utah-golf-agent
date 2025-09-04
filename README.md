@@ -1,6 +1,6 @@
 # IN DEVELOPMENT
 FYI - I'm in a "deliver  first, fix bugs second" mindset with this until it gains user traction.
-## ![Logo](https://github.com/user-attachments/assets/121245f1-d9e8-43bc-b4b4-bec1509b08cc "Logo text") [Utah Tee Time](https://utah-golf-agent-ui.vercel.app/).
+## ![Logo](https://github.com/user-attachments/assets/4548ab8d-8fc3-48f4-811c-8136e95d70b5 "Logo text") [Utah Tee Time](https://utah-golf-agent-ui.vercel.app/).
 Will be available at utahteetime.com once my DNS records update.
 ![Site Screenshot](https://github.com/user-attachments/assets/53b96f28-98f3-4039-91e4-3ce33f2ae4c4 "Utah Tee Time Screenshot")
 
