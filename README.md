@@ -2,7 +2,7 @@
 FYI - I'm in a "deliver  first, fix bugs second" mindset with this until it gains user traction.
 ## ![Logo](https://github.com/user-attachments/assets/4548ab8d-8fc3-48f4-811c-8136e95d70b5 "Logo text") [Utah Tee Time](https://utah-golf-agent-ui.vercel.app/).
 Will be available at utahteetime.com once my DNS records update.
-![Site Screenshot](https://github.com/user-attachments/assets/53b96f28-98f3-4039-91e4-3ce33f2ae4c4 "Utah Tee Time Screenshot")
+![Site Screenshot](https://github.com/user-attachments/assets/6ca673d9-7d51-461d-8634-a83f1ca5e0b2 "Utah Tee Time Screenshot")
 
 # Utah Tee Time
 ## A project aimed at simplifiying golf tee time bookings across the state of Utah.
