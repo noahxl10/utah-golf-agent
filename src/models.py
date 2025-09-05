@@ -31,6 +31,9 @@ class TeeTimeCache(db.Model):
 
     # Availability tracking
     is_available = db.Column(db.Boolean, default=True)
+    
+    # Raw data storage
+    raw_json_response = db.Column(db.JSON)  # Store the full raw JSON response
 
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -84,6 +87,8 @@ class TeeTimeCache(db.Model):
             self.special_offer or False,
             'is_available':
             self.is_available,
+            'raw_json_response':
+            self.raw_json_response,
             'created_at':
             self.created_at.isoformat() if self.created_at else None,
             'updated_at':

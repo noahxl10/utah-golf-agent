@@ -142,7 +142,8 @@ class V2(CourseAPI):
             "green_fee": price_info.get("green_fee", 0.0),
             "price": price_info.get("subtotal", 0.0),  # Using subtotal as the main price
             "half_cart": price_info.get("half_cart", 0.0),
-            "subtotal": price_info.get("subtotal", 0.0)
+            "subtotal": price_info.get("subtotal", 0.0),
+            "raw_json_response": response_data
         }
         # print(tee_time_data)
 

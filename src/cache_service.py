@@ -64,6 +64,7 @@ class TeeTimeCacheService:
                 existing_entry.restrictions = tee_time.restrictions
                 existing_entry.special_offer = getattr(tee_time,
                                                        'special_offer', False)
+                existing_entry.raw_json_response = getattr(tee_time, 'raw_json_response', None)
                 existing_entry.last_seen_at = current_time
                 existing_entry.updated_at = current_time
 
@@ -84,6 +85,7 @@ class TeeTimeCacheService:
                     restrictions=tee_time.restrictions,
                     special_offer=getattr(tee_time, 'special_offer', False),
                     is_available=tee_time.is_available,
+                    raw_json_response=getattr(tee_time, 'raw_json_response', None),
                     last_seen_at=current_time)
                 db.session.add(new_entry)
 

@@ -68,6 +68,7 @@ class Eaglewood:
             subtotal=price,
             min_num_players=min_num_players,
             max_num_players=max_num_players,
+            raw_json_response=r,
         )
 
 

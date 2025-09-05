@@ -54,6 +54,7 @@ class TeeTime(BaseModel):
 
     min_num_players: Optional[int] = None
     max_num_players: Optional[int] = None
+    raw_json_response: Optional[dict] = None
 
     # @property
     # def is_available(self) -> bool:
