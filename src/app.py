@@ -8,7 +8,7 @@ import time
 from src.config import courses
 from src.scraper import scraper
 from src import test
-from src.models import db, init_db, CourseRequest, BugReport
+from src.models import db, init_db, CourseRequest, BugReport, RequestLog
 from src.cache_service import TeeTimeCacheService
 from src.util import (
     sched,
@@ -73,7 +73,8 @@ def index():
             "/api/available_dates": "Get distinct available dates from cached tee times",
             "/api/course_requests": "Submit (POST) or get (GET) course requests",
             "/api/course_requests/<id>/mark_added": "Mark course request as added (PATCH)",
-            "/api/file_a_bug": "Submit bug reports (POST)"
+            "/api/file_a_bug": "Submit bug reports (POST)",
+            "/api/request_logs": "Get external API request logs (GET)"
         }
     })
 
@@ -328,3 +329,58 @@ def file_a_bug():
         'message': 'Bug report submitted successfully',
         'report': new_bug_report.to_dict()
     }), 201
+
+
+@app.route('/api/request_logs', methods=['GET'])
+@traffic.rate_limit()
+def get_request_logs():
+    """Get external API request logs"""
+    try:
+        # Get query parameters
+        limit = request.args.get('limit', 100, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        provider = request.args.get('provider')  # Filter by provider
+        course = request.args.get('course')  # Filter by course
+        is_error = request.args.get('is_error')  # Filter by error status
+        
+        # Build query
+        query = RequestLog.query
+        
+        # Apply filters
+        if provider:
+            query = query.filter(RequestLog.provider == provider)
+        if course:
+            query = query.filter(RequestLog.course == course)
+        if is_error is not None:
+            query = query.filter(RequestLog.is_error == (is_error.lower() == 'true'))
+        
+        # Get total count for pagination
+        total_count = query.count()
+        
+        # Apply pagination and ordering
+        logs = query.order_by(RequestLog.datetime.desc()).offset(offset).limit(limit).all()
+        
+        # Convert to dictionaries
+        logs_data = [log.to_dict() for log in logs]
+        
+        return jsonify({
+            'logs': logs_data,
+            'pagination': {
+                'total': total_count,
+                'limit': limit,
+                'offset': offset,
+                'has_more': (offset + limit) < total_count
+            },
+            'filters': {
+                'provider': provider,
+                'course': course,
+                'is_error': is_error
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Error getting request logs: {e}")
+        return jsonify({
+            'error': 'Failed to retrieve request logs',
+            'details': str(e)
+        }), 500

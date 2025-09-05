@@ -164,6 +164,39 @@ class BugReport(db.Model):
         }
 
 
+class RequestLog(db.Model):
+    __tablename__ = 'request_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    datetime = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    course = db.Column(db.String(255), nullable=True)  # Course name
+    provider = db.Column(db.String(50), nullable=False)  # chronogolf, foreup, eaglewood, etc
+    endpoint = db.Column(db.String(500), nullable=False)  # Full URL endpoint
+    response = db.Column(db.JSON, nullable=True)  # Full API response
+    error = db.Column(db.Text, nullable=True)  # Error message if request failed
+    is_error = db.Column(db.Boolean, default=False, nullable=False)  # Flag for failed requests
+    status_code = db.Column(db.Integer, nullable=True)  # HTTP status code
+    duration_ms = db.Column(db.Integer, nullable=True)  # Request duration in milliseconds
+
+    def __repr__(self):
+        return f'<RequestLog {self.id} {self.provider} {self.datetime}>'
+
+    def to_dict(self):
+        """Convert to dictionary for JSON serialization"""
+        return {
+            'id': self.id,
+            'datetime': self.datetime.isoformat() if self.datetime else None,
+            'course': self.course,
+            'provider': self.provider,
+            'endpoint': self.endpoint,
+            'response': self.response,
+            'error': self.error,
+            'is_error': self.is_error,
+            'status_code': self.status_code,
+            'duration_ms': self.duration_ms
+        }
+
+
 def init_db(app):
     """Initialize the database with Flask app context"""
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')

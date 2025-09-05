@@ -12,6 +12,7 @@ from src._typing.structs import (
     Course,
 )
 from src.misc import request_builder
+from src.request_logger import RequestLogger, RequestTimer
 
 
 class CourseAPI:
@@ -61,31 +62,91 @@ class V1(CourseAPI):
         )
 
     def _hit_endpoint_with_requests(self, tee_time_parameter: TeeTimeParameter):
-
-        response = requests.get(
-            tee_time_parameter.endpoint,
-            headers = tee_time_parameter.headers
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-        # Parse the JSON data (assuming it's tee time data)
-        if isinstance(data, list):
-            tee_times = data
-        else:
-            tee_times = data.get('data', data)  # Handle different response formats
-
-        return data
+        
+        with RequestTimer() as timer:
+            try:
+                response = requests.get(
+                    tee_time_parameter.endpoint,
+                    headers = tee_time_parameter.headers
+                )
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                # Log successful request
+                RequestLogger.log_success(
+                    provider="chronogolf_v1",
+                    endpoint=tee_time_parameter.endpoint,
+                    response=data,
+                    course=self.course.name,
+                    status_code=response.status_code,
+                    duration_ms=timer.get_duration()
+                )
+                
+                # Parse the JSON data (assuming it's tee time data)
+                if isinstance(data, list):
+                    tee_times = data
+                else:
+                    tee_times = data.get('data', data)  # Handle different response formats
+                
+                return data
+                
+            except Exception as e:
+                # Log failed request
+                RequestLogger.log_error(
+                    provider="chronogolf_v1",
+                    endpoint=tee_time_parameter.endpoint,
+                    error=str(e),
+                    course=self.course.name,
+                    status_code=getattr(response, 'status_code', None) if 'response' in locals() else None,
+                    duration_ms=timer.get_duration()
+                )
+                raise
 
     def _hit_endpoint_with_curl(self, tee_time_parameter: TeeTimeParameter):
-        cmd = request_builder.cg_v1(tee_time_parameter)
-
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
-        data = json.loads(result.stdout)
-        return data
+        with RequestTimer() as timer:
+            try:
+                cmd = request_builder.cg_v1(tee_time_parameter)
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                
+                if result.returncode != 0:
+                    error_msg = f"Curl command failed: {result.stderr}"
+                    RequestLogger.log_error(
+                        provider="chronogolf_v1",
+                        endpoint=tee_time_parameter.endpoint,
+                        error=error_msg,
+                        course=self.course.name,
+                        duration_ms=timer.get_duration()
+                    )
+                    raise Exception(error_msg)
+                
+                data = json.loads(result.stdout)
+                
+                # Log successful request
+                RequestLogger.log_success(
+                    provider="chronogolf_v1",
+                    endpoint=tee_time_parameter.endpoint,
+                    response=data,
+                    course=self.course.name,
+                    duration_ms=timer.get_duration()
+                )
+                
+                return data
+                
+            except Exception as e:
+                if "json.loads" in str(e):
+                    error_msg = f"Invalid JSON response: {result.stdout[:200] if 'result' in locals() else 'Unknown'}"
+                else:
+                    error_msg = str(e)
+                    
+                RequestLogger.log_error(
+                    provider="chronogolf_v1",
+                    endpoint=tee_time_parameter.endpoint,
+                    error=error_msg,
+                    course=self.course.name,
+                    duration_ms=timer.get_duration()
+                )
+                raise
 
     def get_tee_times(self, tee_time_parameter: TeeTimeParameter) -> List[TeeTime]: #  
         tee_times = []
@@ -154,32 +215,91 @@ class V2(CourseAPI):
 
 # @exponential_backoff
     def _hit_endpoint_with_requests(self, tee_time_parameter: TeeTimeParameter):
-        response = requests.get(
-            tee_time_parameter.endpoint,
-            headers = tee_time_parameter.headers
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-        # print(json.dumps(data, indent=2))
-
-        # Parse the JSON data (assuming it's tee time data)
-        if isinstance(data, list):
-            tee_times = data
-        else:
-            tee_times = data.get('data', data)  # Handle different response formats
-
-        return data
+        with RequestTimer() as timer:
+            try:
+                response = requests.get(
+                    tee_time_parameter.endpoint,
+                    headers = tee_time_parameter.headers
+                )
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                # Log successful request
+                RequestLogger.log_success(
+                    provider="chronogolf_v2",
+                    endpoint=tee_time_parameter.endpoint,
+                    response=data,
+                    course=self.course.name,
+                    status_code=response.status_code,
+                    duration_ms=timer.get_duration()
+                )
+                
+                # Parse the JSON data (assuming it's tee time data)
+                if isinstance(data, list):
+                    tee_times = data
+                else:
+                    tee_times = data.get('data', data)  # Handle different response formats
+                
+                return data
+                
+            except Exception as e:
+                # Log failed request
+                RequestLogger.log_error(
+                    provider="chronogolf_v2",
+                    endpoint=tee_time_parameter.endpoint,
+                    error=str(e),
+                    course=self.course.name,
+                    status_code=getattr(response, 'status_code', None) if 'response' in locals() else None,
+                    duration_ms=timer.get_duration()
+                )
+                raise
 
     def _hit_endpoint_with_curl(self, tee_time_parameter: TeeTimeParameter):
-        cmd = request_builder.cg_v2(tee_time_parameter)
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        data = json.loads(result.stdout)
-        # print(data)
-        data = data.get("teetimes", [])
-        # print(json.dumps(data, indent=2))
-        return data
+        with RequestTimer() as timer:
+            try:
+                cmd = request_builder.cg_v2(tee_time_parameter)
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                
+                if result.returncode != 0:
+                    error_msg = f"Curl command failed: {result.stderr}"
+                    RequestLogger.log_error(
+                        provider="chronogolf_v2",
+                        endpoint=tee_time_parameter.endpoint,
+                        error=error_msg,
+                        course=self.course.name,
+                        duration_ms=timer.get_duration()
+                    )
+                    raise Exception(error_msg)
+                
+                data = json.loads(result.stdout)
+                tee_times_data = data.get("teetimes", [])
+                
+                # Log successful request
+                RequestLogger.log_success(
+                    provider="chronogolf_v2",
+                    endpoint=tee_time_parameter.endpoint,
+                    response=data,
+                    course=self.course.name,
+                    duration_ms=timer.get_duration()
+                )
+                
+                return tee_times_data
+                
+            except Exception as e:
+                if "json.loads" in str(e):
+                    error_msg = f"Invalid JSON response: {result.stdout[:200] if 'result' in locals() else 'Unknown'}"
+                else:
+                    error_msg = str(e)
+                    
+                RequestLogger.log_error(
+                    provider="chronogolf_v2",
+                    endpoint=tee_time_parameter.endpoint,
+                    error=error_msg,
+                    course=self.course.name,
+                    duration_ms=timer.get_duration()
+                )
+                raise
 
     def get_tee_times(self, tee_time_parameter: TeeTimeParameter) -> List[TeeTime]: #  
         tee_times = []

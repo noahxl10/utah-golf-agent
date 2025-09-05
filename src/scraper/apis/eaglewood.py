@@ -12,6 +12,7 @@ from src._typing.structs import (
     Course,
 )
 from src.misc import request_builder
+from src.request_logger import RequestLogger, RequestTimer
 
 
 class Eaglewood:
@@ -73,13 +74,49 @@ class Eaglewood:
 
 
     def _hit_endpoint_with_curl(self) -> dict:
-
-        cmd = request_builder.ew_curl(self.tee_time_parameter)
-
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
-        data = json.loads(result.stdout)
-        return data
+        with RequestTimer() as timer:
+            try:
+                cmd = request_builder.ew_curl(self.tee_time_parameter)
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                
+                if result.returncode != 0:
+                    error_msg = f"Curl command failed: {result.stderr}"
+                    RequestLogger.log_error(
+                        provider="eaglewood",
+                        endpoint=self.tee_time_parameter.endpoint,
+                        error=error_msg,
+                        course=self.course.name,
+                        duration_ms=timer.get_duration()
+                    )
+                    raise Exception(error_msg)
+                
+                data = json.loads(result.stdout)
+                
+                # Log successful request
+                RequestLogger.log_success(
+                    provider="eaglewood",
+                    endpoint=self.tee_time_parameter.endpoint,
+                    response=data,
+                    course=self.course.name,
+                    duration_ms=timer.get_duration()
+                )
+                
+                return data
+                
+            except Exception as e:
+                if "json.loads" in str(e):
+                    error_msg = f"Invalid JSON response: {result.stdout[:200] if 'result' in locals() else 'Unknown'}"
+                else:
+                    error_msg = str(e)
+                    
+                RequestLogger.log_error(
+                    provider="eaglewood",
+                    endpoint=self.tee_time_parameter.endpoint,
+                    error=error_msg,
+                    course=self.course.name,
+                    duration_ms=timer.get_duration()
+                )
+                raise
         # for tee_time_dict in data:
         #     tee_time_minutes = tee_time_dict.get("teeTime")
 
