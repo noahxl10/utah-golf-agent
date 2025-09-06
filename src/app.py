@@ -39,20 +39,23 @@ def fetch_tee_times_from_db():
 # Initialize scheduler (only in main process)
 # import os
 # if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
-try:
-    scheduler = BackgroundScheduler(timezone='UTC')
-    scheduler = sched.add_jobs(scheduler, app)  # Pass Flask app for context
-    scheduler.start()
-    print("✓ Scheduler started successfully")
+SCHED_RUN = False
+if SCHED_RUN:
+    try:
+        scheduler = BackgroundScheduler(timezone='UTC')
+        scheduler = sched.add_jobs(scheduler, app)  # Pass Flask app for context
+        scheduler.start()
+        print("✓ Scheduler started successfully")
+    
+        # Shut down the scheduler when exiting the app
+        atexit.register(lambda: scheduler.shutdown() if scheduler else None)
+    except Exception as e:
+        print(f"✗ Failed to start scheduler: {e}")
+        import traceback
+        print(traceback.format_exc())
+        # Continue running without scheduler rather than crashing
+        scheduler = None
 
-    # Shut down the scheduler when exiting the app
-    atexit.register(lambda: scheduler.shutdown() if scheduler else None)
-except Exception as e:
-    print(f"✗ Failed to start scheduler: {e}")
-    import traceback
-    print(traceback.format_exc())
-    # Continue running without scheduler rather than crashing
-    scheduler = None
 # else:
 #     print("Skipping scheduler initialization in reloader process")
 #     scheduler = None
