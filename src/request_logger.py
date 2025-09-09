@@ -34,6 +34,11 @@ class RequestLogger:
             status_code: HTTP status code (optional)
             duration_ms: Request duration in milliseconds (optional)
         """
+        # Skip logging if running in standalone mode
+        import os
+        if os.environ.get('STANDALONE_MODE'):
+            return
+            
         try:
             # Create the log entry
             log_entry = RequestLog(
