@@ -187,9 +187,9 @@ def get_all_tee_times(date):
     return all_times_ordered
 
 
-# x = get_all_tee_times("2025-09-03")
+x = get_all_tee_times("2025-09-03")
 # print(x)
 # x = eaglewood_tee_times("2025-09-03") # "9:30 AM" 4:30 PM
 # x = foreup_tee_times("2025-09-03") # 17:15
-# x = chronogolf_tee_times("2025-09-05") 
+# x = chronogolf_tee_times("2025-09-05")
 # print(x)
